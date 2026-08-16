@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>2027冬季沖繩之旅-獅薩與家人</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Zen Maru Gothic (可愛圓體) -->
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ocean: '#7FA2C7',      // 大海藍
+            oceanLight: '#E8F1F5', // 淺海藍
+            rock: '#8B929A',       // 岩石灰
+            sand: '#FAF8F5',       // 沙灘白 (延伸底色)
+            sakura: '#FFC0CB',     // 櫻花粉
+            sakuraDark: '#E08395',
+            appCard: '#FFFFFF'
+          },
+          fontFamily: {
+            cute: ['"Zen Maru Gothic"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #FAF8F5;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* 隱藏滾動條但保持滑動 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* 壓按質感 */
+    .btn-press:active {
+      transform: scale(0.95);
+    }
+  </style>
+</head>
+<body class="text-gray-800 pb-20">
+
+  <div id="app" class="max-w-md mx-auto min-h-screen relative shadow-2xl bg-[#FAF8F5] overflow-x-hidden">
+    
+    <!-- 1. 固定頁首 Banner (250px 高度，圓弧底銜接) -->
+    <header class="fixed top-0 left-0 right-0 max-w-md mx-auto z-30 bg-[#FAF8F5]">
+      <div class="relative h-[250px] w-full overflow-hidden rounded-b-[35px] shadow-md border-b-4 border-ocean/30">
+        <!-- 滿版 Banner 圖片 -->
+        <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
+             alt="2027冬季沖繩之旅 Banner" 
+             class="w-full h-full object-cover object-center"
+             onerror="this.src='https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80'">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+        <div class="absolute bottom-4 left-5 right-5 text-white flex justify-between items-end">
+          <div>
+            <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">2027 冬季沖繩</span>
+            <h1 class="text-xl font-black mt-1 drop-shadow-md">獅薩與家人沖繩之旅</h1>
+          </div>
+          <div class="text-right bg-white/20 backdrop-blur-md px-3 py-1 rounded-2xl border border-white/40">
+            <p class="text-[10px] text-white/90">2027.02.24 - 02.28</p>
+            <p class="text-xs font-bold">5 天 4 夜自駕行</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主內容區域：以負邊距 -mt-6 與頁首圓弧接軌 -->
+    <main class="pt-[240px] px-4 pb-24 relative z-10 -mt-3">
+
+      <!-- Tab 1: 每日行程表 -->
+      <section v-if="currentTab === 'schedule'" class="space-y-4">
+        
+        <!-- 日期滑動選擇列 -->
+        <div class="flex space-x-2 overflow-x-auto no-scrollbar py-2 px-1">
+          <button v-for="(day, idx) in days" :key="idx" 
+                  @click="activeDayIndex = idx"
+                  :class="activeDayIndex === idx ? 'bg-ocean text-white scale-105 shadow-md border-2 border-white' : 'bg-white text-gray-600 border border-gray-200'"
+                  class="flex-shrink-0 w-16 h-16 rounded-2xl flex flex-col items-center justify-center transition-all duration-200 btn-press">
+            <span class="text-base font-black leading-none mb-1">{{ day.week }}</span>
+            <span class="text-xs font-bold leading-none">{{ day.date }}</span>
+          </button>
+        </div>
+
+        <!-- 當日天氣資訊欄位 -->
+        <div class="bg-gradient-to-r from-oceanLight to-white p-3.5 rounded-2xl shadow-sm border border-ocean/20 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 text-xl shadow-inner">
+              <i class="fa-solid fa-cloud-sun"></i>
+            </div>
+            <div>
+              <p class="text-xs text-rock font-bold">{{ currentDayData.region }} • {{ currentDayData.dateStr }}</p>
+              <div class="flex items-center space-x-2">
+                <span class="text-lg font-black text-gray-800">{{ currentWeather.temp }}°C</span>
+                <span class="text-xs bg-white/80 px-2 py-0.5 rounded-md border border-gray-200 text-gray-600">體感 {{ currentWeather.feelsLike }}°C</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-right text-xs text-gray-500 font-medium">
+            <p><i class="fa-solid fa-umbrella text-ocean mr-1"></i>降雨率 {{ currentWeather.rainProb }}%</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">即時氣象更新</p>
+          </div>
+        </div>
+
+        <!-- 行程清單 (拖曳與清單) -->
+        <div class="space-y-3">
+          <div v-for="(item, index) in currentDayData.items" :key="item.id" class="relative">
+            
+            <!-- 上個景點到當前景點的交通時間與路線規劃連結 (第一筆特別處理) -->
+            <div v-if="index > 0" class="my-2 flex items-center justify-center">
+              <a :href="getGoogleMapsDirectionsUrl(currentDayData.items[index-1], item)" target="_blank"
+                 class="bg-white/90 hover:bg-oceanLight text-ocean border border-ocean/30 px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-car text-ocean"></i>
+                <span>約 {{ item.transitTime || '25' }} 分鐘</span>
+                <i class="fa-solid fa-route text-[10px] text-rock"></i>
+              </a>
+            </div>
+
+            <!-- 1. 航班/機場特別卡片 (去程第一項 & 回程最後一項) -->
+            <div v-if="item.type === 'flight'" class="bg-gradient-to-r from-ocean to-slate-700 text-white rounded-3xl p-4 shadow-lg border-2 border-white relative overflow-hidden">
+              <div class="flex justify-between items-start mb-2">
+                <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-plane-departure mr-1"></i>航班資訊</span>
+                <span class="text-xs text-white/80 font-mono">{{ item.flightNo }}</span>
+              </div>
+              <div class="flex justify-between items-center my-2">
+                <div class="text-center">
+                  <p class="text-2xl font-black">{{ item.depCode }}</p>
+                  <p class="text-xs text-white/80">{{ item.depTime }}</p>
+                </div>
+                <div class="flex-1 px-4 text-center">
+                  <p class="text-[10px] text-white/70">{{ item.duration }}</p>
+                  <div class="w-full border-b-2 border-dashed border-white/40 my-1 relative">
+                    <i class="fa-solid fa-plane absolute -top-2 left-1/2 -translate-x-1/2 text-xs"></i>
+                  </div>
+                  <p class="text-[10px] text-sakura font-bold">{{ item.airline }}</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-2xl font-black">{{ item.arrCode }}</p>
+                  <p class="text-xs text-white/80">{{ item.arrTime }}</p>
+                </div>
+              </div>
+              <p class="text-xs text-white/90 bg-black/20 p-2 rounded-xl mt-2"><i class="fa-solid fa-circle-info mr-1 text-sakura"></i>{{ item.note }}</p>
+            </div>
+
+            <!-- 2. 一般景點/美食/購物卡片 -->
+            <div v-else 
+                 draggable="true" 
+                 @dragstart="onDragStart(index)" 
+                 @dragover.prevent 
+                 @drop="onDrop(index)"
+                 class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 relative group transition hover:shadow-lg">
+              
+              <div class="flex items-start space-x-3">
+                <!-- 景點照片 (與景點同名圖檔或預設圖) -->
+                <div class="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100 shadow-inner">
+                  <img :src="item.name + '.jpeg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-oceanLight text-ocean">{{ item.category }}</span>
+                    <div class="flex items-center space-x-1">
+                      <!-- 編輯按鈕 -->
+                      <button @click="openEditModal(item, index)" class="text-rock hover:text-ocean p-1 text-xs">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                      </button>
+                      <!-- 三條線拖曳排序按鈕 -->
+                      <button class="cursor-grab text-gray-300 hover:text-rock p-1 text-xs">
+                        <i class="fa-solid fa-bars"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 點擊名稱或導航圖示直接開啟 Google Map 導航 -->
+                  <a :href="getGoogleMapNavUrl(item.name)" target="_blank" class="block group-hover:text-ocean transition">
+                    <h3 class="font-black text-base text-gray-800 truncate mt-0.5 flex items-center">
+                      {{ item.name }}
+                      <i class="fa-solid fa-location-arrow text-xs text-ocean ml-1.5 opacity-80"></i>
+                    </h3>
+                  </a>
+
+                  <p class="text-xs text-gray-500 mt-0.5"><i class="fa-regular fa-clock mr-1 text-ocean"></i>{{ item.time || '全天開放' }}</p>
+                  <p v-if="item.ticket" class="text-xs text-gray-500"><i class="fa-solid fa-ticket mr-1 text-sakuraDark"></i>{{ item.ticket }}</p>
+                </div>
+              </div>
+
+              <!-- 景點特色簡介 (至少3點) -->
+              <div v-if="item.features && item.features.length" class="mt-3 bg-sand rounded-2xl p-2.5 border border-amber-100/60">
+                <p class="text-[11px] font-bold text-gray-600 mb-1"><i class="fa-solid fa-star text-amber-400 mr-1"></i>特色亮點：</p>
+                <ul class="text-xs text-gray-600 space-y-0.5 pl-3 list-disc">
+                  <li v-for="(feat, fIdx) in item.features" :key="fIdx">{{ feat }}</li>
+                </ul>
+              </div>
+
+              <!-- 備註 -->
+              <p v-if="item.note" class="text-xs text-rock mt-2 pt-2 border-t border-gray-100 flex items-start">
+                <i class="fa-regular fa-comment-dots mr-1.5 mt-0.5 text-ocean"></i>
+                <span>{{ item.note }}</span>
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab 2: 航班 & 租車 & 每日住宿資訊 -->
+      <section v-if="currentTab === 'info'" class="space-y-5">
+        
+        <!-- 1. 航班資訊 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <h2 class="font-black text-lg text-ocean flex items-center mb-3">
+            <i class="fa-solid fa-plane text-sakuraDark mr-2"></i>航班資訊（長榮航空）
+          </h2>
+          <div class="space-y-3">
+            <!-- 去程 -->
+            <div class="bg-oceanLight/60 rounded-2xl p-3 border border-ocean/20">
+              <div class="flex justify-between items-center text-xs text-rock font-bold mb-1">
+                <span>去程 • 2027/02/24 (三)</span>
+                <span class="bg-ocean text-white px-2 py-0.5 rounded-full text-[10px]">BR112</span>
+              </div>
+              <div class="flex justify-between items-center my-1">
+                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">06:55 桃園</p></div>
+                <div class="text-center text-xs text-rock">1 hr 20 min<br>➔</div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">09:15 那霸</p></div>
+              </div>
+            </div>
+            <!-- 回程 -->
+            <div class="bg-sakura/20 rounded-2xl p-3 border border-sakura/30">
+              <div class="flex justify-between items-center text-xs text-rock font-bold mb-1">
+                <span>回程 • 2027/02/28 (日)</span>
+                <span class="bg-sakuraDark text-white px-2 py-0.5 rounded-full text-[10px]">BR185</span>
+              </div>
+              <div class="flex justify-between items-center my-1">
+                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">20:10 那霸</p></div>
+                <div class="text-center text-xs text-rock">1 hr 45 min<br>➔</div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">20:55 桃園</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 租車資訊 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <h2 class="font-black text-lg text-ocean flex items-center mb-2">
+            <i class="fa-solid fa-car text-ocean mr-2"></i>租車資訊 (OTS 臨空豐崎營業所)
+          </h2>
+          <p class="text-xs text-rock mb-3"><i class="fa-regular fa-clock mr-1"></i>2/24 11:00 ~ 2/28 11:00</p>
+          
+          <div class="space-y-3">
+            <div class="bg-sand p-3 rounded-2xl border border-amber-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-sm text-gray-800">【HYUNDAI】IONIQ5 × 1台</h3>
+                  <p class="text-xs text-gray-500 mt-0.5">純電 SUV • 靜音舒適大空間</p>
+                </div>
+                <span class="text-xs font-black text-ocean">37,950 日圓</span>
+              </div>
+            </div>
+
+            <div class="bg-sand p-3 rounded-2xl border border-amber-100">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-sm text-gray-800">【TOYOTA】bZ4X × 1台</h3>
+                  <p class="text-xs text-gray-500 mt-0.5">純電跨界休旅 • 先進安全配備</p>
+                </div>
+                <span class="text-xs font-black text-ocean">40,150 日圓</span>
+              </div>
+            </div>
+
+            <div class="text-xs text-gray-600 bg-oceanLight/40 p-2.5 rounded-xl space-y-1">
+              <p><i class="fa-solid fa-shield-halved text-ocean mr-1"></i><strong>保險方案：</strong>豪華安心險</p>
+              <p><i class="fa-solid fa-plus-circle text-sakuraDark mr-1"></i><strong>加購項目：</strong>定額 ETC 卡 ×1、定額 EV 卡 ×1</p>
+            </div>
+
+            <a href="https://maps.google.com/?q=OTS臨空豐崎營業所" target="_blank" class="block w-full py-2 bg-ocean text-white rounded-2xl text-center text-xs font-bold shadow-sm btn-press">
+              <i class="fa-solid fa-location-dot mr-1"></i>導航至 OTS 租車營業所
+            </a>
+          </div>
+        </div>
+
+        <!-- 3. 住宿資訊 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <h2 class="font-black text-lg text-ocean flex items-center mb-3">
+            <i class="fa-solid fa-hotel text-sakuraDark mr-2"></i>每日住宿飯店
+          </h2>
+
+          <div class="space-y-4">
+            <div v-for="(hotel, idx) in hotels" :key="idx" class="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sakura text-sakuraDark">{{ hotel.days }}</span>
+              <h3 class="font-bold text-sm text-gray-800 mt-1">{{ hotel.name }}</h3>
+              <p class="text-xs text-rock mt-0.5"><i class="fa-solid fa-star text-amber-400 mr-1"></i>{{ hotel.feature }}</p>
+              <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-square-parking mr-1 text-ocean"></i>{{ hotel.parking }}</p>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-[11px] text-gray-400 truncate max-w-[200px]"><i class="fa-solid fa-phone mr-1"></i>{{ hotel.phone }}</span>
+                <a :href="hotel.navUrl" target="_blank" class="px-3 py-1 bg-oceanLight text-ocean font-bold rounded-xl text-xs hover:bg-ocean hover:text-white transition">
+                  <i class="fa-solid fa-compass mr-1"></i>地圖導航
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 緊急醫療救援 -->
+        <div class="bg-red-50 rounded-3xl p-4 shadow-sm border border-red-100">
+          <h2 class="font-black text-base text-red-600 flex items-center mb-2">
+            <i class="fa-solid fa-kit-medical mr-2"></i>緊急救援與醫療電話
+          </h2>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-white p-2 rounded-xl text-center border border-red-100">
+              <p class="text-gray-500">警察局</p>
+              <p class="font-black text-lg text-red-500">110</p>
+            </div>
+            <div class="bg-white p-2 rounded-xl text-center border border-red-100">
+              <p class="text-gray-500">救護車 / 消防</p>
+              <p class="font-black text-lg text-red-500">119</p>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Tab 3: 購物清單 & Coupon 券 -->
+      <section v-if="currentTab === 'shopping'" class="space-y-4">
+        
+        <!-- Coupon 優惠券專區 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="font-black text-base text-ocean flex items-center">
+              <i class="fa-solid fa-ticket text-sakuraDark mr-1.5"></i>店家 Coupon 優惠券
+            </h2>
+            <button @click="openAddCouponModal" class="text-xs bg-sakura/30 text-sakuraDark px-2.5 py-1 rounded-full font-bold">
+              + 新增 Coupon
+            </button>
+          </div>
+
+          <div v-if="coupons.length === 0" class="text-center py-6 text-rock text-xs">
+            目前沒有 Coupon，長按或點擊右上角新增優惠券照片吧！
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div v-for="(coupon, cIdx) in coupons" :key="cIdx" 
+                 @touchstart="startPressTimer(() => openEditCouponModal(coupon, cIdx))"
+                 @touchend="clearPressTimer"
+                 @mousedown="startPressTimer(() => openEditCouponModal(coupon, cIdx))"
+                 @mouseup="clearPressTimer"
+                 class="bg-sand rounded-2xl p-2 border border-amber-100 relative group cursor-pointer shadow-sm">
+              <div class="h-24 rounded-xl overflow-hidden bg-gray-200 mb-1.5">
+                <img :src="coupon.img" class="w-full h-full object-cover">
+              </div>
+              <p class="font-bold text-xs text-gray-800 truncate text-center">{{ coupon.title }}</p>
+              <p class="text-[10px] text-rock text-center">長按 1 秒編輯</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 想買購物清單 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <h2 class="font-black text-base text-gray-800 mb-3 flex items-center">
+            <i class="fa-solid fa-basket-shopping text-ocean mr-2"></i>預計購買清單
+          </h2>
+
+          <div v-if="shoppingList.length === 0" class="text-center py-8 text-rock text-xs">
+            購物清單是空的～點擊右下角「+」號新增想買的物品吧！
+          </div>
+
+          <div class="space-y-3">
+            <div v-for="(item, sIdx) in shoppingList" :key="sIdx"
+                 @touchstart="startPressTimer(() => openEditShoppingModal(item, sIdx))"
+                 @touchend="clearPressTimer"
+                 @mousedown="startPressTimer(() => openEditShoppingModal(item, sIdx))"
+                 @mouseup="clearPressTimer"
+                 class="flex items-center justify-between p-2.5 bg-sand rounded-2xl border border-gray-100 cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-xl overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img :src="item.img || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=200&q=80'" class="w-full h-full object-cover">
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm text-gray-800">{{ item.name }}</h3>
+                  <p class="text-xs text-sakuraDark font-black">¥ {{ item.price || 0 }} JPY</p>
+                </div>
+              </div>
+              <span class="text-[10px] text-rock bg-white px-2 py-1 rounded-lg border">長按編輯</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Tab 4: 匯率與記帳 -->
+      <section v-if="currentTab === 'expense'" class="space-y-4">
+        
+        <!-- 匯率即時換算卡片 -->
+        <div class="bg-gradient-to-br from-ocean to-slate-600 rounded-3xl p-4 text-white shadow-lg">
+          <div class="flex justify-between items-center mb-2">
+            <h2 class="font-bold text-sm flex items-center"><i class="fa-solid fa-calculator mr-1.5"></i>日幣即時匯率換算</h2>
+            <span class="text-[10px] text-white/70">匯率參考: {{ exchangeRate }}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 items-center">
+            <div>
+              <label class="text-[10px] text-white/80 block">輸入日幣 (JPY)</label>
+              <input type="number" v-model="calcJpy" class="w-full bg-white/20 border border-white/30 rounded-xl px-3 py-1.5 text-white font-bold text-lg focus:outline-none placeholder-white/50" placeholder="0">
+            </div>
+            <div>
+              <label class="text-[10px] text-white/80 block">折合台幣 (TWD)</label>
+              <div class="text-xl font-black text-sakura py-1.5">NT$ {{ Math.round(calcJpy * exchangeRate) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 總花費統計 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 flex justify-around items-center text-center">
+          <div>
+            <p class="text-xs text-rock">總花費 (日幣)</p>
+            <p class="text-lg font-black text-gray-800">¥ {{ totalExpenseJPY.toLocaleString() }}</p>
+          </div>
+          <div class="h-8 w-px bg-gray-200"></div>
+          <div>
+            <p class="text-xs text-rock">折合台幣 (約)</p>
+            <p class="text-lg font-black text-sakuraDark">NT$ {{ Math.round(totalExpenseJPY * exchangeRate).toLocaleString() }}</p>
+          </div>
+        </div>
+
+        <!-- 記帳明細清單 -->
+        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
+          <h2 class="font-black text-base text-gray-800 mb-3 flex items-center">
+            <i class="fa-solid fa-receipt text-ocean mr-2"></i>消費記錄表
+          </h2>
+
+          <div v-if="expenses.length === 0" class="text-center py-8 text-rock text-xs">
+            還沒有消費記錄喔，點擊右下角「+」新增記帳！
+          </div>
+
+          <div class="space-y-2.5">
+            <div v-for="(exp, eIdx) in expenses" :key="eIdx"
+                 @touchstart="startPressTimer(() => openEditExpenseModal(exp, eIdx))"
+                 @touchend="clearPressTimer"
+                 @mousedown="startPressTimer(() => openEditExpenseModal(exp, eIdx))"
+                 @mouseup="clearPressTimer"
+                 class="flex items-center justify-between p-3 bg-sand rounded-2xl border border-gray-100 cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <span class="w-8 h-8 rounded-full bg-oceanLight text-ocean flex items-center justify-center text-xs font-bold">
+                  {{ exp.category ? exp.category[0] : '花' }}
+                </span>
+                <div>
+                  <p class="font-bold text-sm text-gray-800">{{ exp.name }}</p>
+                  <p class="text-[10px] text-rock">{{ exp.date }} • {{ exp.payment }}</p>
+                </div>
+              </div>
+              <div class="text-right">
+                <p class="font-black text-sm text-gray-800">¥ {{ exp.amount }}</p>
+                <p class="text-[10px] text-gray-400">NT$ {{ Math.round(exp.amount * exchangeRate) }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- 右下角通用 Floating Add Button (新增按鈕) -->
+    <button v-if="currentTab === 'schedule' || currentTab === 'shopping' || currentTab === 'expense'" 
+            @click="handleFabClick"
+            class="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-r from-ocean to-sakuraDark text-white rounded-full shadow-xl flex items-center justify-center text-2xl z-40 btn-press">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- 頁尾固定 Tab 選單 Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-gray-200 px-6 py-2 flex justify-between items-center z-40 rounded-t-3xl shadow-lg">
+      <button @click="currentTab = 'schedule'" :class="currentTab === 'schedule' ? 'text-ocean scale-110' : 'text-gray-400'" class="flex flex-col items-center btn-press">
+        <i class="fa-solid fa-map-location-dot text-xl"></i>
+        <span class="text-[10px] font-bold mt-1">行程</span>
+      </button>
+
+      <button @click="currentTab = 'info'" :class="currentTab === 'info' ? 'text-ocean scale-110' : 'text-gray-400'" class="flex flex-col items-center btn-press">
+        <i class="fa-solid fa-house text-xl"></i>
+        <span class="text-[10px] font-bold mt-1">資訊</span>
+      </button>
+
+      <button @click="currentTab = 'shopping'" :class="currentTab === 'shopping' ? 'text-ocean scale-110' : 'text-gray-400'" class="flex flex-col items-center btn-press">
+        <i class="fa-solid fa-basket-shopping text-xl"></i>
+        <span class="text-[10px] font-bold mt-1">購物</span>
+      </button>
+
+      <button @click="currentTab = 'expense'" :class="currentTab === 'expense' ? 'text-ocean scale-110' : 'text-gray-400'" class="flex flex-col items-center btn-press">
+        <i class="fa-solid fa-money-bill-wave text-xl"></i>
+        <span class="text-[10px] font-bold mt-1">記帳</span>
+      </button>
+    </nav>
+
+    <!-- Modal 1: 新增 / 編輯行程 Modal -->
+    <div v-if="modalSchedule.show" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-3">
+        <h3 class="font-black text-lg text-gray-800">{{ modalSchedule.isEdit ? '編輯行程' : '新增行程' }}</h3>
+        
+        <input type="text" v-model="modalSchedule.form.name" placeholder="行程 / 景點名稱" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200">
+        <input type="text" v-model="modalSchedule.form.category" placeholder="分類 (例如: 景點 / 美食 / 購物)" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200">
+        <input type="text" v-model="modalSchedule.form.time" placeholder="營業時間 / 預計時間" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200">
+        <input type="text" v-model="modalSchedule.form.ticket" placeholder="門票資訊" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200">
+        <textarea v-model="modalSchedule.form.note" placeholder="備註" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200 h-20"></textarea>
+
+        <div class="flex space-x-2 pt-2">
+          <button v-if="modalSchedule.isEdit" @click="confirmDeleteSchedule" class="px-4 py-2 bg-red-100 text-red-500 rounded-xl text-xs font-bold">刪除</button>
+          <button @click="modalSchedule.show = false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold">取消</button>
+          <button @click="saveSchedule" class="flex-1 py-2 bg-ocean text-white rounded-xl text-xs font-bold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 2: 購物清單 Modal -->
+    <div v-if="modalShopping.show" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-3">
+        <h3 class="font-black text-lg text-gray-800">{{ modalShopping.isEdit ? '編輯購物項目' : '新增購物項目' }}</h3>
+        
+        <input type="text" v-model="modalShopping.form.name" placeholder="商品名稱" class="w-full border p-2.5 rounded-xl text-sm">
+        <input type="number" v-model="modalShopping.form.price" placeholder="預估單價 (JPY)" class="w-full border p-2.5 rounded-xl text-sm">
+        <div class="text-xs text-gray-500">
+          <label class="block mb-1">上傳圖片：</label>
+          <input type="file" @change="handleFileUpload($event, 'shopping')" accept="image/*" class="w-full text-xs">
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+          <button v-if="modalShopping.isEdit" @click="deleteShopping" class="px-4 py-2 bg-red-100 text-red-500 rounded-xl text-xs font-bold">刪除</button>
+          <button @click="modalShopping.show = false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold">取消</button>
+          <button @click="saveShopping" class="flex-1 py-2 bg-ocean text-white rounded-xl text-xs font-bold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 3: Coupon 券 Modal -->
+    <div v-if="modalCoupon.show" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-3">
+        <h3 class="font-black text-lg text-gray-800">{{ modalCoupon.isEdit ? '編輯 Coupon 優惠券' : '新增 Coupon 優惠券' }}</h3>
+        
+        <input type="text" v-model="modalCoupon.form.title" placeholder="商店名稱 / 優惠券說明" class="w-full border p-2.5 rounded-xl text-sm">
+        <div class="text-xs text-gray-500">
+          <label class="block mb-1">上傳優惠券圖片：</label>
+          <input type="file" @change="handleFileUpload($event, 'coupon')" accept="image/*" class="w-full text-xs">
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+          <button v-if="modalCoupon.isEdit" @click="deleteCoupon" class="px-4 py-2 bg-red-100 text-red-500 rounded-xl text-xs font-bold">刪除</button>
+          <button @click="modalCoupon.show = false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold">取消</button>
+          <button @click="saveCoupon" class="flex-1 py-2 bg-ocean text-white rounded-xl text-xs font-bold">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal 4: 記帳 Modal -->
+    <div v-if="modalExpense.show" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4 backdrop-blur-sm">
+      <div class="bg-white rounded-3xl w-full max-w-sm p-5 shadow-2xl space-y-3">
+        <h3 class="font-black text-lg text-gray-800">{{ modalExpense.isEdit ? '編輯記帳' : '新增記帳' }}</h3>
+        
+        <select v-model="modalExpense.form.category" class="w-full border p-2.5 rounded-xl text-sm">
+          <option value="交通">交通</option>
+          <option value="飲食">飲食</option>
+          <option value="住宿">住宿</option>
+          <option value="門票">門票</option>
+          <option value="購物">購物</option>
+          <option value="其他">其他</option>
+        </select>
+
+        <input type="text" v-model="modalExpense.form.name" placeholder="消費名稱" class="w-full border p-2.5 rounded-xl text-sm">
+        
+        <select v-model="modalExpense.form.date" class="w-full border p-2.5 rounded-xl text-sm">
+          <option v-for="d in dateOptions" :key="d" :value="d">{{ d }}</option>
+        </select>
+
+        <input type="number" v-model="modalExpense.form.amount" placeholder="金額 (日幣 JPY)" class="w-full border p-2.5 rounded-xl text-sm">
+
+        <select v-model="modalExpense.form.payment" class="w-full border p-2.5 rounded-xl text-sm">
+          <option value="現金">現金</option>
+          <option value="信用卡">信用卡</option>
+          <option value="LinePay">LinePay</option>
+          <option value="PayPay">PayPay</option>
+          <option value="Suica">Suica (西瓜卡)</option>
+        </select>
+
+        <div class="flex space-x-2 pt-2">
+          <button v-if="modalExpense.isEdit" @click="deleteExpense" class="px-4 py-2 bg-red-100 text-red-500 rounded-xl text-xs font-bold">刪除</button>
+          <button @click="modalExpense.show = false" class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold">取消</button>
+          <button @click="saveExpense" class="flex-1 py-2 bg-ocean text-white rounded-xl text-xs font-bold">保存</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const { createApp, ref, computed } = Vue;
+
+    createApp({
+      setup() {
+        const currentTab = ref('schedule');
+        const activeDayIndex = ref(0);
+        const exchangeRate = ref(0.215); // 日幣兌台幣預設匯率
+        const calcJpy = ref('');
+        const dragIndex = ref(null);
+        let pressTimer = null;
+
+        // 5 天日期資料
+        const days = [
+          { week: '三', date: '2/24' },
+          { week: '四', date: '2/25' },
+          { week: '五', date: '2/26' },
+          { week: '六', date: '2/27' },
+          { week: '日', date: '2/28' }
+        ];
+
+        const dateOptions = ['2027/02/24', '2027/02/25', '2027/02/26', '2027/02/27', '2027/02/28'];
+
+        // 當地即時天氣預設資料
+        const currentWeather = ref({
+          temp: 18,
+          feelsLike: 17,
+          rainProb: 15
+        });
+
+        // 每日行程詳細資料
+        const scheduleData = ref([
+          {
+            day: 1,
+            region: '沖繩南部 ➔ 北谷町',
+            dateStr: '2027/02/24 (三)',
+            items: [
+              {
+                id: 101,
+                type: 'flight',
+                airline: '長榮航空',
+                flightNo: 'BR112',
+                depCode: 'TPE',
+                depTime: '06:55',
+                arrCode: 'OKA',
+                arrTime: '09:15',
+                duration: '1h 20m',
+                note: '抵達後請依指示辦理入境，並搭乘 OTS 接駁車前往營業所'
+              },
+              {
+                id: 102,
+                name: 'OTS臨空豐崎營業所',
+                category: '租車取車',
+                time: '11:00 取車',
+                features: ['租用 IONIQ5 與 bZ4X 電動車', '現場辦理豪華安心險與 ETC/EV 卡', '服務人員支援中文溝通'],
+                note: '預計 11:00 順利取車完畢出發',
+                transitTime: '20'
+              },
+              {
+                id: 103,
+                name: '波上宮',
+                category: '景點',
+                time: '09:00–17:00',
+                ticket: '免費參觀',
+                features: ['建於懸崖峭壁上的神秘琉球八社之首', '可俯瞰美麗海景與崖壁景觀', '獨特的琉球風格御守與繪馬'],
+                note: '午餐享用 Oniku no Isshin 壽喜燒',
+                transitTime: '25'
+              },
+              {
+                id: 104,
+                name: '首里城',
+                category: '景點',
+                time: '08:30–18:00',
+                ticket: '成人約 400 JPY',
+                features: ['琉球王國歷史與文化的象徵標誌', '正殿重建工程現場參觀開放', '歡會門與守禮門古色古香照片熱點'],
+                note: '建議停留 1.5 小時拍照散步',
+                transitTime: '30'
+              },
+              {
+                id: 105,
+                name: '港川外人住宅區',
+                category: '景點 / 美食',
+                time: '11:00–18:00',
+                ticket: '免費',
+                features: ['美軍宿舍改建的彩色文青街區', '知名水果塔名店 oharacorte 所在地', '豐富特色手作雜貨與咖啡甜點'],
+                note: '適合下午悠閒漫步與拍照',
+                transitTime: '20'
+              },
+              {
+                id: 106,
+                name: 'Vessel花苑沖繩飯店',
+                category: '住宿Check-in',
+                time: '15:00後',
+                features: ['位在美國村核心極佳地理位置', '頂樓海景展望大浴場', '豐富沖繩在地特色早餐選擇'],
+                note: '入住辦理手續並擺放行李',
+                transitTime: '35'
+              },
+              {
+                id: 107,
+                name: '美國村',
+                category: '逛街 / 美食',
+                time: '全天開放',
+                features: ['異國風情美式街區與摩天輪地標', '濱海步道欣賞絕美日落夕陽', '美食雲集（晚餐推薦貝出汁拉麵）'],
+                note: '晚餐於美國村享用貝出汁拉麵',
+                transitTime: '5'
+              }
+            ]
+          },
+          {
+            day: 2,
+            region: '中部沿海 ➔ 東海岸',
+            dateStr: '2027/02/25 (四)',
+            items: [
+              {
+                id: 201,
+                name: '嘉手納空軍基地展望台',
+                category: '景點',
+                time: '08:00–18:00',
+                features: ['遠眺遠東最大美軍空軍基地', '四樓展望台視視野極佳', '二樓有道路休息站與名產店'],
+                note: '從 Vessel 飯店出發',
+                transitTime: '20'
+              },
+              {
+                id: 202,
+                name: '青之洞窟',
+                category: '景點',
+                time: '08:00–17:00',
+                features: ['沖繩最知名的自然藍光海蝕洞', '純參觀崖頂絕景與湛藍海面', '周邊海岸線自然地形極為壯觀'],
+                note: '本次純參觀不浮潛',
+                transitTime: '25'
+              },
+              {
+                id: 203,
+                name: '萬座毛',
+                category: '景點',
+                time: '08:00–19:00',
+                ticket: '100 JPY',
+                features: ['象鼻形狀的天然珊瑚礁斷崖景觀', '可容納萬人的廣闊天然草坪', '全新景觀設施與伴手禮賣場'],
+                note: '午餐於恩納村享用在地美食',
+                transitTime: '20'
+              },
+              {
+                id: 204,
+                name: '勝連城遺址',
+                category: '景點',
+                time: '09:00–18:00',
+                features: ['世界文化遺產琉球山城之一', '登上城頂可360度遠眺太平洋與海中道路', '富有古老阿麻和利城主的歷史傳奇'],
+                note: '午後前往 Ryukyu Beach Club 喝咖啡',
+                transitTime: '40'
+              },
+              {
+                id: 205,
+                name: 'AEON Mall Okinawa Rycom',
+                category: '購物',
+                time: '10:00–22:00',
+                features: ['沖繩最大型複合式購物中心', '一樓設有巨型水族箱水槽', '過百間知名品牌與免稅專櫃'],
+                note: '晚上返回美國村吃晚餐',
+                transitTime: '25'
+              }
+            ]
+          },
+          {
+            day: 3,
+            region: '北部海洋 ➔ 名護古宇利',
+            dateStr: '2027/02/26 (五)',
+            items: [
+              {
+                id: 301,
+                name: '許田休息站',
+                category: '景點 / 休息',
+                time: '08:30–19:00',
+                features: ['沖繩票選第一名的公路休息站', '預先購買各類景點優惠門票', '名物天婦羅與沖繩黑糖饅頭'],
+                note: '從美國村飯店出發，往北部行進',
+                transitTime: '45'
+              },
+              {
+                id: 302,
+                name: '古宇利島海洋塔',
+                category: '景點',
+                time: '10:00–17:00',
+                features: ['搭乘自動駕駛高爾夫球車上山', '海膽與海洋主題展覽博物館', '展望台直擊跨海大橋古宇利藍海景'],
+                note: '午餐享用養蝦田定食',
+                transitTime: '30'
+              },
+              {
+                id: 303,
+                name: '美麗海水族館',
+                category: '景點',
+                time: '08:30–18:30',
+                ticket: '約 2,180 JPY',
+                features: ['黑潮之海巨型水槽與鯨鯊同游', '海豚劇場精彩表演免費觀賞', '觸摸池體驗沖繩海星與海膽'],
+                note: '順遊八重岳櫻之森預備賞櫻',
+                transitTime: '35'
+              },
+              {
+                id: 304,
+                name: '沖繩名護海灘貝斯特韋斯特飯店',
+                category: '住宿Check-in',
+                time: '15:00後',
+                features: ['開門即見名護美麗沙灘海景', '陽台可直接欣賞落日餘暉', '舒適客房與極佳海濱氛圍'],
+                note: '前往名護海邊星巴克與名護市區晚餐',
+                transitTime: '25'
+              }
+            ]
+          },
+          {
+            day: 4,
+            region: '南部自然 ➔ 那霸市區',
+            dateStr: '2027/02/27 (六)',
+            items: [
+              {
+                id: 401,
+                name: 'Gangala 之谷',
+                category: '景點',
+                time: '09:00–17:00 (預約制)',
+                features: ['數萬年前鐘乳石洞崩塌形成的神秘山谷', '鐘乳石洞穴咖啡館 Cave Cafe', '導覽解說神秘的大自然與樹人植物'],
+                note: '配合沖繩文化王國玉泉洞，午餐享用大城天婦羅',
+                transitTime: '60'
+              },
+              {
+                id: 402,
+                name: 'PARCO CITY 購物中心',
+                category: '購物',
+                time: '10:00–22:00',
+                features: ['全沖繩最新超大型海景購物中心', '無敵海景美食街與休閒空間', 'Uniqlo, GU, 雜貨與各式流行品牌'],
+                note: '傍晚前往瀨長島欣賞絕美夕陽',
+                transitTime: '35'
+              },
+              {
+                id: 403,
+                name: '那霸皇家公園酒店標誌性',
+                category: '住宿Check-in',
+                time: '15:00後',
+                features: ['位於那霸市區久茂地優越地段', '極具質感的現代日式豪華客房', '緊鄰單軌車站與國際通購物區'],
+                note: '晚餐享用琉球御膳18道或國際通美食',
+                transitTime: '20'
+              }
+            ]
+          },
+          {
+            day: 5,
+            region: '那霸採買 ➔ 返程桃園',
+            dateStr: '2027/02/28 (日)',
+            items: [
+              {
+                id: 501,
+                name: 'OTS臨空豐崎營業所',
+                category: '租車還車',
+                time: '11:00 還車',
+                features: ['檢查車況與油量/電量', '完成退租手續與租車結算', '轉乘接駁車或前往 Outlet'],
+                note: '11:00 前完成還車手續',
+                transitTime: '20'
+              },
+              {
+                id: 502,
+                name: 'ASHIBANAA Outlet',
+                category: '購物',
+                time: '10:00–20:00',
+                features: ['歐風建築風格名品折扣 Outlet', '國際大牌與運動品牌齊備', '距離機場與 OTS 營運所極近'],
+                note: '午餐於 Outlet 享用，後前往機場寄放行李',
+                transitTime: '15'
+              },
+              {
+                id: 503,
+                name: '國際通',
+                category: '購物 / 美食',
+                time: '全天開放',
+                features: ['那霸最熱鬧繁華的奇蹟一英里', 'Fontana Gelato, 雪鹽冰, Blue Seal', '最後巡禮採買伴手禮與紀念品'],
+                note: '搭乘單軌電車彈性遊覽周邊景點',
+                transitTime: '20'
+              },
+              {
+                id: 504,
+                type: 'flight',
+                airline: '長榮航空',
+                flightNo: 'BR185',
+                depCode: 'OKA',
+                depTime: '20:10',
+                arrCode: 'TPE',
+                arrTime: '20:55',
+                duration: '1h 45m',
+                note: '請於 18:10 前抵達那霸機場辦理登機與託運'
+              }
+            ]
+          }
+        ]);
+
+        // 住宿詳細資料
+        const hotels = [
+          {
+            days: 'Day 1 & Day 2',
+            name: 'Vessel花苑沖繩飯店 (Vessel Hotel Campana Okinawa)',
+            feature: '位於美國村海濱第一排，附設海景展望大浴場與海景客房。',
+            parking: '設有飯店專用住客免費停車場',
+            phone: '+81 98-926-1188',
+            navUrl: 'https://maps.google.com/?q=Vessel+Hotel+Campana+Okinawa'
+          },
+          {
+            days: 'Day 3',
+            name: '沖繩名護海灘貝斯特韋斯特飯店 (Best Western Okinawa Kouki Beach)',
+            feature: '所有客房均為海景房，下樓即抵達幸喜海灘，漫步海邊極為舒適。',
+            parking: '飯店附設專用停車場',
+            phone: '+81 98-054-8155',
+            navUrl: 'https://maps.google.com/?q=Best+Western+Okinawa+Kouki+Beach'
+          },
+          {
+            days: 'Day 4',
+            name: '那霸皇家公園酒店標誌性 (Royal Park Hotel Iconic Naha)',
+            feature: '位在那霸市中心久茂地，奢華質感設計，步行即可抵達國際通。',
+            parking: '立體特約停車場 (付費)',
+            phone: '+81 98-951-1111',
+            navUrl: 'https://maps.google.com/?q=Royal+Park+Hotel+Iconic+Naha'
+          }
+        ];
+
+        // 購物與 Coupon 狀態 (無預設範本)
+        const coupons = ref([]);
+        const shoppingList = ref([]);
+        const expenses = ref([]);
+
+        // Modals state
+        const modalSchedule = ref({ show: false, isEdit: false, index: null, form: { name: '', category: '', time: '', ticket: '', note: '' } });
+        const modalShopping = ref({ show: false, isEdit: false, index: null, form: { name: '', price: '', img: '' } });
+        const modalCoupon = ref({ show: false, isEdit: false, index: null, form: { title: '', img: '' } });
+        const modalExpense = ref({ show: false, isEdit: false, index: null, form: { category: '飲食', name: '', date: '2027/02/24', amount: '', payment: '現金' } });
+
+        const currentDayData = computed(() => {
+          return scheduleData.value[activeDayIndex.value] || scheduleData.value[0];
+        });
+
+        const totalExpenseJPY = computed(() => {
+          return expenses.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        });
+
+        // Google Maps 導航連結生成
+        const getGoogleMapNavUrl = (query) => {
+          return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query + ' 沖繩')}`;
+        };
+
+        const getGoogleMapsDirectionsUrl = (originItem, destItem) => {
+          const origin = encodeURIComponent(originItem.name + ' 沖繩');
+          const destination = encodeURIComponent(destItem.name + ' 沖繩');
+          return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+        };
+
+        // 拖曳排序 Drag & Drop
+        const onDragStart = (idx) => {
+          dragIndex.value = idx;
+        };
+
+        const onDrop = (targetIdx) => {
+          if (dragIndex.value !== null && dragIndex.value !== targetIdx) {
+            const list = currentDayData.value.items;
+            const movedItem = list.splice(dragIndex.value, 1)[0];
+            list.splice(targetIdx, 0, movedItem);
+          }
+          dragIndex.value = null;
+        };
+
+        // 長按事件判斷 (1秒)
+        const startPressTimer = (callback) => {
+          pressTimer = setTimeout(() => {
+            callback();
+          }, 1000);
+        };
+
+        const clearPressTimer = () => {
+          if (pressTimer) clearTimeout(pressTimer);
+        };
+
+        // FAB 按鈕邏輯
+        const handleFabClick = () => {
+          if (currentTab.value === 'schedule') {
+            modalSchedule.value = { show: true, isEdit: false, index: null, form: { name: '', category: '景點', time: '', ticket: '', note: '' } };
+          } else if (currentTab.value === 'shopping') {
+            modalShopping.value = { show: true, isEdit: false, index: null, form: { name: '', price: '', img: '' } };
+          } else if (currentTab.value === 'expense') {
+            modalExpense.value = { show: true, isEdit: false, index: null, form: { category: '飲食', name: '', date: dateOptions[activeDayIndex.value] || '2027/02/24', amount: '', payment: '現金' } };
+          }
+        };
+
+        // 圖片上傳 (轉 Base64)
+        const handleFileUpload = (e, type) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              if (type === 'shopping') modalShopping.value.form.img = event.target.result;
+              if (type === 'coupon') modalCoupon.value.form.img = event.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        // Modal 操作方法：行程
+        const openEditModal = (item, idx) => {
+          modalSchedule.value = { show: true, isEdit: true, index: idx, form: { ...item } };
+        };
+
+        const saveSchedule = () => {
+          if (!modalSchedule.value.form.name) return;
+          const items = currentDayData.value.items;
+          if (modalSchedule.value.isEdit) {
+            items[modalSchedule.value.index] = { ...items[modalSchedule.value.index], ...modalSchedule.value.form };
+          } else {
+            items.push({ id: Date.now(), features: ['自由行程景點'], ...modalSchedule.value.form });
+          }
+          modalSchedule.value.show = false;
+        };
+
+        const confirmDeleteSchedule = () => {
+          if (confirm('確定要刪除這個行程嗎？')) {
+            currentDayData.value.items.splice(modalSchedule.value.index, 1);
+            modalSchedule.value.show = false;
+          }
+        };
+
+        // Modal 操作方法：購物
+        const openEditShoppingModal = (item, idx) => {
+          modalShopping.value = { show: true, isEdit: true, index: idx, form: { ...item } };
+        };
+
+        const saveShopping = () => {
+          if (!modalShopping.value.form.name) return;
+          if (modalShopping.value.isEdit) {
+            shoppingList.value[modalShopping.value.index] = { ...modalShopping.value.form };
+          } else {
+            shoppingList.value.push({ ...modalShopping.value.form });
+          }
+          modalShopping.value.show = false;
+        };
+
+        const deleteShopping = () => {
+          shoppingList.value.splice(modalShopping.value.index, 1);
+          modalShopping.value.show = false;
+        };
+
+        // Modal 操作方法：Coupon
+        const openAddCouponModal = () => {
+          modalCoupon.value = { show: true, isEdit: false, index: null, form: { title: '', img: '' } };
+        };
+
+        const openEditCouponModal = (coupon, idx) => {
+          modalCoupon.value = { show: true, isEdit: true, index: idx, form: { ...coupon } };
+        };
+
+        const saveCoupon = () => {
+          if (!modalCoupon.value.form.title) return;
+          if (modalCoupon.value.isEdit) {
+            coupons.value[modalCoupon.value.index] = { ...modalCoupon.value.form };
+          } else {
+            coupons.value.push({ ...modalCoupon.value.form });
+          }
+          modalCoupon.value.show = false;
+        };
+
+        const deleteCoupon = () => {
+          coupons.value.splice(modalCoupon.value.index, 1);
+          modalCoupon.value.show = false;
+        };
+
+        // Modal 操作方法：記帳
+        const openEditExpenseModal = (exp, idx) => {
+          modalExpense.value = { show: true, isEdit: true, index: idx, form: { ...exp } };
+        };
+
+        const saveExpense = () => {
+          if (!modalExpense.value.form.name || !modalExpense.value.form.amount) return;
+          if (modalExpense.value.isEdit) {
+            expenses.value[modalExpense.value.index] = { ...modalExpense.value.form };
+          } else {
+            expenses.value.push({ ...modalExpense.value.form });
+          }
+          modalExpense.value.show = false;
+        };
+
+        const deleteExpense = () => {
+          expenses.value.splice(modalExpense.value.index, 1);
+          modalExpense.value.show = false;
+        };
+
+        return {
+          currentTab,
+          days,
+          activeDayIndex,
+          currentDayData,
+          currentWeather,
+          hotels,
+          exchangeRate,
+          calcJpy,
+          coupons,
+          shoppingList,
+          expenses,
+          totalExpenseJPY,
+          dateOptions,
+          modalSchedule,
+          modalShopping,
+          modalCoupon,
+          modalExpense,
+          getGoogleMapNavUrl,
+          getGoogleMapsDirectionsUrl,
+          onDragStart,
+          onDrop,
+          startPressTimer,
+          clearPressTimer,
+          handleFabClick,
+          handleFileUpload,
+          openEditModal,
+          saveSchedule,
+          confirmDeleteSchedule,
+          openAddCouponModal,
+          openEditCouponModal,
+          saveCoupon,
+          deleteCoupon,
+          openEditShoppingModal,
+          saveShopping,
+          deleteShopping,
+          openEditExpenseModal,
+          saveExpense,
+          deleteExpense
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
