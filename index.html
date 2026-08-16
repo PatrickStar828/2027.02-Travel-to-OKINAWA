@@ -64,7 +64,7 @@
     <header class="fixed top-0 left-0 right-0 max-w-md mx-auto z-30 bg-[#FAF8F5]">
       <div class="relative h-[250px] w-full overflow-hidden rounded-b-[35px] shadow-md border-b-4 border-ocean/30">
         <!-- 滿版 Banner 圖片 -->
-        <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
+        <img src="景點圖片/2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
              alt="2027冬季沖繩之旅 Banner" 
              class="w-full h-full object-cover object-center"
              onerror="this.src='https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80'">
@@ -170,7 +170,7 @@
               <div class="flex items-start space-x-3">
                 <!-- 景點照片 (與景點同名圖檔或預設圖) -->
                 <div class="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100 shadow-inner">
-                  <img :src="item.name + '.jpeg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
+                  <img :src="'景點圖片/' + item.name + '.jpeg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
                 </div>
 
                 <div class="flex-1 min-w-0">
