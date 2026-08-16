@@ -60,11 +60,11 @@
 
   <div id="app" class="max-w-md mx-auto min-h-screen relative shadow-2xl bg-[#FAF8F5] overflow-x-hidden">
     
-    <!-- 1. 固定頁首 Banner (250px 高度，圓弧底銜接) -->
+    <!-- 1. 固定頁首 Banner -->
     <header class="fixed top-0 left-0 right-0 max-w-md mx-auto z-30 bg-[#FAF8F5]">
       <div class="relative h-[250px] w-full overflow-hidden rounded-b-[35px] shadow-md border-b-4 border-ocean/30">
         <!-- 滿版 Banner 圖片 -->
-        <img src="景點圖片/2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
+        <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
              alt="2027冬季沖繩之旅 Banner" 
              class="w-full h-full object-cover object-center"
              onerror="this.src='https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80'">
@@ -82,7 +82,7 @@
       </div>
     </header>
 
-    <!-- 主內容區域：以負邊距 -mt-6 與頁首圓弧接軌 -->
+    <!-- 主內容區域 -->
     <main class="pt-[240px] px-4 pb-24 relative z-10 -mt-3">
 
       <!-- Tab 1: 每日行程表 -->
@@ -123,17 +123,17 @@
         <div class="space-y-3">
           <div v-for="(item, index) in currentDayData.items" :key="item.id" class="relative">
             
-            <!-- 上個景點到當前景點的交通時間與路線規劃連結 (第一筆特別處理) -->
+            <!-- 上個景點到當前景點的交通時間與路線規劃連結 -->
             <div v-if="index > 0" class="my-2 flex items-center justify-center">
               <a :href="getGoogleMapsDirectionsUrl(currentDayData.items[index-1], item)" target="_blank"
                  class="bg-white/90 hover:bg-oceanLight text-ocean border border-ocean/30 px-3 py-1 rounded-full text-xs font-bold shadow-sm flex items-center space-x-1.5 transition">
                 <i class="fa-solid fa-car text-ocean"></i>
-                <span>約 {{ item.transitTime || '25' }} 分鐘</span>
+                <span>約 {{ item.transitTime || '20' }} 分鐘</span>
                 <i class="fa-solid fa-route text-[10px] text-rock"></i>
               </a>
             </div>
 
-            <!-- 1. 航班/機場特別卡片 (去程第一項 & 回程最後一項) -->
+            <!-- 1. 航班/機場特別卡片 -->
             <div v-if="item.type === 'flight'" class="bg-gradient-to-r from-ocean to-slate-700 text-white rounded-3xl p-4 shadow-lg border-2 border-white relative overflow-hidden">
               <div class="flex justify-between items-start mb-2">
                 <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-plane-departure mr-1"></i>航班資訊</span>
@@ -161,28 +161,27 @@
 
             <!-- 2. 一般景點/美食/購物卡片 -->
             <div v-else 
-                 draggable="true" 
+                 :draggable="draggedIndex === index" 
                  @dragstart="onDragStart(index)" 
                  @dragover.prevent 
                  @drop="onDrop(index)"
                  class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 relative group transition hover:shadow-lg">
               
               <div class="flex items-start space-x-3">
-                <!-- 景點照片 (與景點同名圖檔或預設圖) -->
+                <!-- 景點照片 (左上角放上與景點名稱相同圖檔，從 Github 資料夾抓取) -->
                 <div class="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100 shadow-inner">
-                  <img :src="'景點圖片/' + item.name + '.jpeg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
+                  <img :src="item.name + '.jpg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.onerror=null; this.src=this.src.endsWith('.jpg')?this.src.replace('.jpg','.png'):'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
                 </div>
 
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-oceanLight text-ocean">{{ item.category }}</span>
-                    <div class="flex items-center space-x-1">
-                      <!-- 編輯按鈕 -->
-                      <button @click="openEditModal(item, index)" class="text-rock hover:text-ocean p-1 text-xs">
+                    <!-- 編輯按鈕下方生成一個三條線 ICON 圖示按鈕，拉動此按鈕才能拖曳 -->
+                    <div class="flex flex-col items-center space-y-1">
+                      <button @click="openEditModal(item, index)" class="text-rock hover:text-ocean p-1 text-xs" title="編輯">
                         <i class="fa-solid fa-pen-to-square"></i>
                       </button>
-                      <!-- 三條線拖曳排序按鈕 -->
-                      <button class="cursor-grab text-gray-300 hover:text-rock p-1 text-xs">
+                      <button @mousedown="draggedIndex = index" @mouseup="draggedIndex = null" @mouseleave="draggedIndex = null" class="cursor-grab text-gray-400 hover:text-rock p-1 text-xs active:cursor-grabbing" title="按住拖曳排序">
                         <i class="fa-solid fa-bars"></i>
                       </button>
                     </div>
@@ -201,15 +200,15 @@
                 </div>
               </div>
 
-              <!-- 景點特色簡介 (至少3點) -->
+              <!-- 景點特色簡介 -->
               <div v-if="item.features && item.features.length" class="mt-3 bg-sand rounded-2xl p-2.5 border border-amber-100/60">
-                <p class="text-[11px] font-bold text-gray-600 mb-1"><i class="fa-solid fa-star text-amber-400 mr-1"></i>特色亮點：</p>
+                <p class="text-[11px] font-bold text-gray-600 mb-1"><i class="fa-solid fa-star text-amber-400 mr-1"></i>景點特色簡介：</p>
                 <ul class="text-xs text-gray-600 space-y-0.5 pl-3 list-disc">
                   <li v-for="(feat, fIdx) in item.features" :key="fIdx">{{ feat }}</li>
                 </ul>
               </div>
 
-              <!-- 備註 -->
+              <!-- 備註與餐食資訊 -->
               <p v-if="item.note" class="text-xs text-rock mt-2 pt-2 border-t border-gray-100 flex items-start">
                 <i class="fa-regular fa-comment-dots mr-1.5 mt-0.5 text-ocean"></i>
                 <span>{{ item.note }}</span>
@@ -236,9 +235,9 @@
                 <span class="bg-ocean text-white px-2 py-0.5 rounded-full text-[10px]">BR112</span>
               </div>
               <div class="flex justify-between items-center my-1">
-                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">06:55 桃園</p></div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">06:55 桃園機場</p></div>
                 <div class="text-center text-xs text-rock">1 hr 20 min<br>➔</div>
-                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">09:15 那霸</p></div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">09:15 那霸機場</p></div>
               </div>
             </div>
             <!-- 回程 -->
@@ -248,9 +247,9 @@
                 <span class="bg-sakuraDark text-white px-2 py-0.5 rounded-full text-[10px]">BR185</span>
               </div>
               <div class="flex justify-between items-center my-1">
-                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">20:10 那霸</p></div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">OKA</p><p class="text-xs text-gray-500">20:10 那霸機場</p></div>
                 <div class="text-center text-xs text-rock">1 hr 45 min<br>➔</div>
-                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">20:55 桃園</p></div>
+                <div class="text-center"><p class="font-black text-xl text-gray-800">TPE</p><p class="text-xs text-gray-500">20:55 桃園機場</p></div>
               </div>
             </div>
           </div>
@@ -258,7 +257,7 @@
 
         <!-- 2. 租車資訊 -->
         <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
-          <h2 class="font-black text-lg text-ocean flex items-center mb-2">
+          <h2 class="font-black text-lg text-ocean flex items-center mb-1">
             <i class="fa-solid fa-car text-ocean mr-2"></i>租車資訊 (OTS 臨空豐崎營業所)
           </h2>
           <p class="text-xs text-rock mb-3"><i class="fa-regular fa-clock mr-1"></i>2/24 11:00 ~ 2/28 11:00</p>
@@ -267,30 +266,39 @@
             <div class="bg-sand p-3 rounded-2xl border border-amber-100">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="font-bold text-sm text-gray-800">【HYUNDAI】IONIQ5 × 1台</h3>
-                  <p class="text-xs text-gray-500 mt-0.5">純電 SUV • 靜音舒適大空間</p>
+                  <h3 class="font-bold text-sm text-gray-800">【HYUNDAI】IONIQ5 (早鳥優惠 90)</h3>
+                  <p class="text-xs text-gray-500 mt-0.5">5人座純電 SUV • 行進靜音、車內空間寬闊舒適</p>
                 </div>
-                <span class="text-xs font-black text-ocean">37,950 日圓</span>
+                <span class="text-xs font-black text-ocean">47,990 日圓</span>
+              </div>
+              <div class="mt-2 text-[11px] text-gray-600 bg-white/80 p-2 rounded-xl">
+                <p>• <strong>後車箱尺寸：</strong>長約 1,016mm / 高約 809mm / 最大寬約 1,253mm</p>
+                <p>• <strong>行李容量：</strong>可放 3 個 98L (RIMOWA TOPAS) 大行李箱</p>
               </div>
             </div>
 
             <div class="bg-sand p-3 rounded-2xl border border-amber-100">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="font-bold text-sm text-gray-800">【TOYOTA】bZ4X × 1台</h3>
-                  <p class="text-xs text-gray-500 mt-0.5">純電跨界休旅 • 先進安全配備</p>
+                  <h3 class="font-bold text-sm text-gray-800">【TOYOTA】bZ4X (早鳥優惠 90)</h3>
+                  <p class="text-xs text-gray-500 mt-0.5">5人座豐田純電休旅 • 零排放、先進安全裝備</p>
                 </div>
-                <span class="text-xs font-black text-ocean">40,150 日圓</span>
+                <span class="text-xs font-black text-ocean">47,990 日圓</span>
+              </div>
+              <div class="mt-2 text-[11px] text-gray-600 bg-white/80 p-2 rounded-xl">
+                <p>• <strong>後車箱尺寸：</strong>長約 985mm / 高約 757mm / 最大寬約 1,288mm</p>
+                <p>• <strong>行李容量：</strong>可放 2~3 個 98L 大行李箱</p>
               </div>
             </div>
 
             <div class="text-xs text-gray-600 bg-oceanLight/40 p-2.5 rounded-xl space-y-1">
               <p><i class="fa-solid fa-shield-halved text-ocean mr-1"></i><strong>保險方案：</strong>豪華安心險</p>
-              <p><i class="fa-solid fa-plus-circle text-sakuraDark mr-1"></i><strong>加購項目：</strong>定額 ETC 卡 ×1、定額 EV 卡 ×1</p>
+              <p><i class="fa-solid fa-plus-circle text-sakuraDark mr-1"></i><strong>加購項目：</strong>定額 ETC 卡 ×1 / 定額 EV 卡 ×1</p>
+              <p><i class="fa-solid fa-credit-card text-gray-500 mr-1"></i><strong>付款方式：</strong>當地支付</p>
             </div>
 
             <a href="https://maps.google.com/?q=OTS臨空豐崎營業所" target="_blank" class="block w-full py-2 bg-ocean text-white rounded-2xl text-center text-xs font-bold shadow-sm btn-press">
-              <i class="fa-solid fa-location-dot mr-1"></i>導航至 OTS 租車營業所
+              <i class="fa-solid fa-location-dot mr-1"></i>導航至 OTS 臨空豐崎營業所
             </a>
           </div>
         </div>
@@ -302,34 +310,24 @@
           </h2>
 
           <div class="space-y-4">
-            <div v-for="(hotel, idx) in hotels" :key="idx" class="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+            <div v-for="(hotel, idx) in hotels" :key="idx" class="border-b border-gray-100 pb-4 last:border-b-0 last:pb-0">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sakura text-sakuraDark">{{ hotel.days }}</span>
-              <h3 class="font-bold text-sm text-gray-800 mt-1">{{ hotel.name }}</h3>
-              <p class="text-xs text-rock mt-0.5"><i class="fa-solid fa-star text-amber-400 mr-1"></i>{{ hotel.feature }}</p>
-              <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-square-parking mr-1 text-ocean"></i>{{ hotel.parking }}</p>
+              <h3 class="font-bold text-sm text-gray-800 mt-1.5 mb-2">{{ hotel.name }}</h3>
+              
+              <!-- 飯店照片 -->
+              <div class="w-full h-40 rounded-2xl overflow-hidden mb-2 bg-gray-100 shadow-inner">
+                <img :src="hotel.img" :alt="hotel.name" class="w-full h-full object-cover" onerror="this.onerror=null; this.src=this.src.endsWith('.jpg')?this.src.replace('.jpg','.png'):'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&q=80'">
+              </div>
+
+              <p class="text-xs text-rock"><i class="fa-solid fa-location-dot text-ocean mr-1"></i>{{ hotel.address }}</p>
               <div class="flex items-center justify-between mt-2">
-                <span class="text-[11px] text-gray-400 truncate max-w-[200px]"><i class="fa-solid fa-phone mr-1"></i>{{ hotel.phone }}</span>
+                <a :href="hotel.url" target="_blank" class="text-xs text-ocean underline truncate max-w-[200px]">
+                  <i class="fa-solid fa-globe mr-1"></i>飯店官方網站
+                </a>
                 <a :href="hotel.navUrl" target="_blank" class="px-3 py-1 bg-oceanLight text-ocean font-bold rounded-xl text-xs hover:bg-ocean hover:text-white transition">
                   <i class="fa-solid fa-compass mr-1"></i>地圖導航
                 </a>
               </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. 緊急醫療救援 -->
-        <div class="bg-red-50 rounded-3xl p-4 shadow-sm border border-red-100">
-          <h2 class="font-black text-base text-red-600 flex items-center mb-2">
-            <i class="fa-solid fa-kit-medical mr-2"></i>緊急救援與醫療電話
-          </h2>
-          <div class="grid grid-cols-2 gap-2 text-xs">
-            <div class="bg-white p-2 rounded-xl text-center border border-red-100">
-              <p class="text-gray-500">警察局</p>
-              <p class="font-black text-lg text-red-500">110</p>
-            </div>
-            <div class="bg-white p-2 rounded-xl text-center border border-red-100">
-              <p class="text-gray-500">救護車 / 消防</p>
-              <p class="font-black text-lg text-red-500">119</p>
             </div>
           </div>
         </div>
@@ -475,14 +473,14 @@
 
     </main>
 
-    <!-- 右下角通用 Floating Add Button (新增按鈕) -->
+    <!-- 通用 Floating Add Button -->
     <button v-if="currentTab === 'schedule' || currentTab === 'shopping' || currentTab === 'expense'" 
             @click="handleFabClick"
             class="fixed bottom-20 right-6 w-14 h-14 bg-gradient-to-r from-ocean to-sakuraDark text-white rounded-full shadow-xl flex items-center justify-center text-2xl z-40 btn-press">
       <i class="fa-solid fa-plus"></i>
     </button>
 
-    <!-- 頁尾固定 Tab 選單 Navigation Bar -->
+    <!-- 頁尾固定 Tab 選單 -->
     <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 backdrop-blur-md border-t border-gray-200 px-6 py-2 flex justify-between items-center z-40 rounded-t-3xl shadow-lg">
       <button @click="currentTab = 'schedule'" :class="currentTab === 'schedule' ? 'text-ocean scale-110' : 'text-gray-400'" class="flex flex-col items-center btn-press">
         <i class="fa-solid fa-map-location-dot text-xl"></i>
@@ -610,9 +608,10 @@
       setup() {
         const currentTab = ref('schedule');
         const activeDayIndex = ref(0);
-        const exchangeRate = ref(0.215); // 日幣兌台幣預設匯率
+        const exchangeRate = ref(0.215);
         const calcJpy = ref('');
         const dragIndex = ref(null);
+        const draggedIndex = ref(null);
         let pressTimer = null;
 
         // 5 天日期資料
@@ -626,18 +625,17 @@
 
         const dateOptions = ['2027/02/24', '2027/02/25', '2027/02/26', '2027/02/27', '2027/02/28'];
 
-        // 當地即時天氣預設資料
         const currentWeather = ref({
           temp: 18,
           feelsLike: 17,
           rainProb: 15
         });
 
-        // 每日行程詳細資料
+        // 修正後的 5 天每日行程資料
         const scheduleData = ref([
           {
             day: 1,
-            region: '沖繩南部 ➔ 北谷町',
+            region: '南部至中部',
             dateStr: '2027/02/24 (三)',
             items: [
               {
@@ -650,70 +648,67 @@
                 arrCode: 'OKA',
                 arrTime: '09:15',
                 duration: '1h 20m',
-                note: '抵達後請依指示辦理入境，並搭乘 OTS 接駁車前往營業所'
+                note: '抵達那霸機場（約 10:00 出關），搭乘接駁車前往 OTS 取車'
               },
               {
                 id: 102,
                 name: 'OTS臨空豐崎營業所',
                 category: '租車取車',
                 time: '11:00 取車',
-                features: ['租用 IONIQ5 與 bZ4X 電動車', '現場辦理豪華安心險與 ETC/EV 卡', '服務人員支援中文溝通'],
-                note: '預計 11:00 順利取車完畢出發',
-                transitTime: '20'
+                features: ['辦理 2 台 5 人座純電動車取車', '投保豪華安心險', '加購定額 ETC 卡與 EV 卡'],
+                note: '預計 11:00 完成取車手續出發',
+                transitTime: '15'
               },
               {
                 id: 103,
                 name: '波上宮',
                 category: '景點',
-                time: '09:00–17:00',
-                ticket: '免費參觀',
-                features: ['建於懸崖峭壁上的神秘琉球八社之首', '可俯瞰美麗海景與崖壁景觀', '獨特的琉球風格御守與繪馬'],
-                note: '午餐享用 Oniku no Isshin 壽喜燒',
-                transitTime: '25'
+                time: '全天開放',
+                features: ['佇立於崖頂的琉球八社之首', '俯瞰蔚藍海景與獨特神社建築', '參拜祈福並購買特殊波上宮御守'],
+                note: '午餐：享用沖繩麵',
+                transitTime: '20'
               },
               {
                 id: 104,
                 name: '首里城',
                 category: '景點',
                 time: '08:30–18:00',
-                ticket: '成人約 400 JPY',
-                features: ['琉球王國歷史與文化的象徵標誌', '正殿重建工程現場參觀開放', '歡會門與守禮門古色古香照片熱點'],
-                note: '建議停留 1.5 小時拍照散步',
-                transitTime: '30'
+                features: ['琉球王國歷史與文化核心遺址', '參觀正殿重建工程之珍貴過程', '守禮門與歡會門經典古蹟拍照點'],
+                note: '歷史文化巡禮',
+                transitTime: '25'
               },
               {
                 id: 105,
                 name: '港川外人住宅區',
                 category: '景點 / 美食',
                 time: '11:00–18:00',
-                ticket: '免費',
-                features: ['美軍宿舍改建的彩色文青街區', '知名水果塔名店 oharacorte 所在地', '豐富特色手作雜貨與咖啡甜點'],
-                note: '適合下午悠閒漫步與拍照',
+                features: ['美軍宿舍改建的繽紛美式街區', '知名水果塔名店 oharacorte 所在地', '特色文創雜貨與精品手沖咖啡'],
+                note: '午後悠閒漫步與甜點時光',
                 transitTime: '20'
               },
               {
                 id: 106,
                 name: 'Vessel花苑沖繩飯店',
                 category: '住宿Check-in',
-                time: '15:00後',
-                features: ['位在美國村核心極佳地理位置', '頂樓海景展望大浴場', '豐富沖繩在地特色早餐選擇'],
-                note: '入住辦理手續並擺放行李',
-                transitTime: '35'
+                time: '15:00後 Check-in',
+                features: ['位在美國村海濱第一排優越位置', '頂樓海景展望大浴場', '豐富沖繩在地特色早餐選擇'],
+                note: '辦理入住並放行李',
+                transitTime: '30'
               },
               {
                 id: 107,
                 name: '美國村',
                 category: '逛街 / 美食',
                 time: '全天開放',
-                features: ['異國風情美式街區與摩天輪地標', '濱海步道欣賞絕美日落夕陽', '美食雲集（晚餐推薦貝出汁拉麵）'],
-                note: '晚餐於美國村享用貝出汁拉麵',
+                features: ['異國風情美式海風街區', '濱海步道欣賞美麗夕陽', '夜間彩燈與多樣化異國店家'],
+                note: '晚餐：美國村 貝出汁拉麵',
                 transitTime: '5'
               }
             ]
           },
           {
             day: 2,
-            region: '中部沿海 ➔ 東海岸',
+            region: '中部沿海與東海岸',
             dateStr: '2027/02/25 (四)',
             items: [
               {
@@ -721,17 +716,17 @@
                 name: '嘉手納空軍基地展望台',
                 category: '景點',
                 time: '08:00–18:00',
-                features: ['遠眺遠東最大美軍空軍基地', '四樓展望台視視野極佳', '二樓有道路休息站與名產店'],
-                note: '從 Vessel 飯店出發',
+                features: ['俯瞰遠東最大美軍空軍基地', '四樓展望台視線寬廣遼闊', '設有道路休息站與名產賣場'],
+                note: '飯店出發第一站',
                 transitTime: '20'
               },
               {
                 id: 202,
                 name: '青之洞窟',
                 category: '景點',
-                time: '08:00–17:00',
-                features: ['沖繩最知名的自然藍光海蝕洞', '純參觀崖頂絕景與湛藍海面', '周邊海岸線自然地形極為壯觀'],
-                note: '本次純參觀不浮潛',
+                time: '全天開放',
+                features: ['沖繩最著名的自然藍光海蝕洞', '崖頂俯瞰蔚藍斷崖絕景', '感受壯麗海浪與自然地形'],
+                note: '純參觀不浮潛',
                 transitTime: '25'
               },
               {
@@ -740,33 +735,51 @@
                 category: '景點',
                 time: '08:00–19:00',
                 ticket: '100 JPY',
-                features: ['象鼻形狀的天然珊瑚礁斷崖景觀', '可容納萬人的廣闊天然草坪', '全新景觀設施與伴手禮賣場'],
-                note: '午餐於恩納村享用在地美食',
+                features: ['像象鼻一樣的天然珊瑚礁斷崖', '可容納萬人的開闊天然草皮', '全新商場與絕景觀景步道'],
+                note: '午餐：恩納村享用在地美食',
                 transitTime: '20'
               },
               {
                 id: 204,
-                name: '勝連城遺址',
-                category: '景點',
-                time: '09:00–18:00',
-                features: ['世界文化遺產琉球山城之一', '登上城頂可360度遠眺太平洋與海中道路', '富有古老阿麻和利城主的歷史傳奇'],
-                note: '午後前往 Ryukyu Beach Club 喝咖啡',
-                transitTime: '40'
+                name: 'Ryukyu Beach Club咖啡店',
+                category: '美食 / 咖啡',
+                time: '11:00–19:00',
+                features: ['全海景美式風格海濱咖啡廳', '愜意享受午後海風與精緻飲品', '熱門海景美照打卡點'],
+                note: '午後海邊咖啡放鬆',
+                transitTime: '30'
               },
               {
                 id: 205,
+                name: '勝連城遺址',
+                category: '景點',
+                time: '09:00–18:00',
+                features: ['世界文化遺產，琉球最古老城池之一', '頂端可 360 度俯瞰太平洋與海中道路', '古老阿麻和利城主的歷史傳奇'],
+                note: '歷史遺蹟探訪',
+                transitTime: '25'
+              },
+              {
+                id: 206,
                 name: 'AEON Mall Okinawa Rycom',
                 category: '購物',
                 time: '10:00–22:00',
-                features: ['沖繩最大型複合式購物中心', '一樓設有巨型水族箱水槽', '過百間知名品牌與免稅專櫃'],
-                note: '晚上返回美國村吃晚餐',
+                features: ['沖繩最大型複合式購物中心', '一樓設有巨型大水族箱', '上百間品牌專櫃與豐富伴手禮'],
+                note: '大型購物中心採買；午餐亦可搭配燒肉五苑(宇流麻店)',
                 transitTime: '25'
+              },
+              {
+                id: 207,
+                name: '美國村',
+                category: '美食 / 購物',
+                time: '全天開放',
+                features: ['浪漫夜間燈飾散步', '多樣化美式與日式酒吧餐廳', '悠閒購物體驗'],
+                note: '晚餐：美國村美食',
+                transitTime: '20'
               }
             ]
           },
           {
             day: 3,
-            region: '北部海洋 ➔ 名護古宇利',
+            region: '北部海洋與名護古宇利',
             dateStr: '2027/02/26 (五)',
             items: [
               {
@@ -774,8 +787,8 @@
                 name: '許田休息站',
                 category: '景點 / 休息',
                 time: '08:30–19:00',
-                features: ['沖繩票選第一名的公路休息站', '預先購買各類景點優惠門票', '名物天婦羅與沖繩黑糖饅頭'],
-                note: '從美國村飯店出發，往北部行進',
+                features: ['沖繩票選第一名的公路休息站', '購買優惠景點門票的好去處', '必吃沖繩天婦羅與黑糖饅頭'],
+                note: '飯店出發往北部',
                 transitTime: '45'
               },
               {
@@ -783,77 +796,148 @@
                 name: '古宇利島海洋塔',
                 category: '景點',
                 time: '10:00–17:00',
-                features: ['搭乘自動駕駛高爾夫球車上山', '海膽與海洋主題展覽博物館', '展望台直擊跨海大橋古宇利藍海景'],
-                note: '午餐享用養蝦田定食',
+                features: ['搭乘自動駕駛高爾夫球車上山', '展示一萬多件世界貝殼博物館', '展望台直擊「古宇利藍」絕美跨海大橋'],
+                note: '午餐：養蝦田定食',
                 transitTime: '30'
               },
               {
                 id: 303,
-                name: '美麗海水族館',
-                category: '景點',
-                time: '08:30–18:30',
-                ticket: '約 2,180 JPY',
-                features: ['黑潮之海巨型水槽與鯨鯊同游', '海豚劇場精彩表演免費觀賞', '觸摸池體驗沖繩海星與海膽'],
-                note: '順遊八重岳櫻之森預備賞櫻',
-                transitTime: '35'
+                name: '天然石雜貨店',
+                category: '購物',
+                time: '10:00–18:00',
+                features: ['精緻沖繩限定天然石與手作飾品', '獨一無二的紀念品與伴手禮', '充滿療癒氛圍的溫馨小店'],
+                note: '特色小店採買',
+                transitTime: '15'
               },
               {
                 id: 304,
+                name: '美麗海水族館',
+                category: '景點',
+                time: '08:30–18:30',
+                features: ['「黑潮之海」巨型水槽與鯨鯊同游', '精彩海豚表演免費觀賞', '親近海洋生物之觸摸池體驗'],
+                note: '精彩海洋世界體驗',
+                transitTime: '25'
+              },
+              {
+                id: 305,
+                name: '八重岳櫻之森',
+                category: '景點',
+                time: '全天開放',
+                features: ['日本最早開花寒緋櫻賞櫻勝地', '數千株粉嫩櫻花樹環繞山道', '漫步櫻花森林步道極具詩意'],
+                note: '賞櫻預備行程',
+                transitTime: '20'
+              },
+              {
+                id: 306,
+                name: '森之玻璃館',
+                category: '景點 / 手作',
+                time: '09:00–18:00',
+                features: ['體驗沖繩琉球玻璃工藝製作', '各式彩虹般燦爛的玻璃藝術品', '適合選購精美琉球玻璃杯做紀念'],
+                note: '玻璃工藝體驗與參觀',
+                transitTime: '15'
+              },
+              {
+                id: 307,
+                name: '名護海邊星巴克',
+                category: '美食 / 咖啡',
+                time: '07:00–22:00',
+                features: ['獨棟海景星巴克門市', '大片落地窗飽覽名護灣蔚藍海景', '享受邊喝咖啡邊看海的悠閒時光'],
+                note: '傍晚咖啡休息',
+                transitTime: '10'
+              },
+              {
+                id: 308,
                 name: '沖繩名護海灘貝斯特韋斯特飯店',
                 category: '住宿Check-in',
-                time: '15:00後',
-                features: ['開門即見名護美麗沙灘海景', '陽台可直接欣賞落日餘暉', '舒適客房與極佳海濱氛圍'],
-                note: '前往名護海邊星巴克與名護市區晚餐',
-                transitTime: '25'
+                time: '15:00後 Check-in',
+                features: ['所有客房均為海景房', '下樓即達幸喜海灘沙灘', '陽台可直接欣賞名護灣夕陽'],
+                note: ' Check-in 登記入住；晚餐：名護市區餐飲',
+                transitTime: '15'
               }
             ]
           },
           {
             day: 4,
-            region: '南部自然 ➔ 那霸市區',
+            region: '南部自然文化與那霸市區',
             dateStr: '2027/02/27 (六)',
             items: [
               {
                 id: 401,
-                name: 'Gangala 之谷',
-                category: '景點',
-                time: '09:00–17:00 (預約制)',
-                features: ['數萬年前鐘乳石洞崩塌形成的神秘山谷', '鐘乳石洞穴咖啡館 Cave Cafe', '導覽解說神秘的大自然與樹人植物'],
-                note: '配合沖繩文化王國玉泉洞，午餐享用大城天婦羅',
-                transitTime: '60'
+                name: '中城停車區休息站',
+                category: '休息站',
+                time: '全天開放',
+                features: ['高速公路舒適休息站', '提供沖繩在地特色小吃與飲料', '補給與長途開車中途休息點'],
+                note: '名護飯店出發往南部',
+                transitTime: '40'
               },
               {
                 id: 402,
-                name: 'PARCO CITY 購物中心',
-                category: '購物',
-                time: '10:00–22:00',
-                features: ['全沖繩最新超大型海景購物中心', '無敵海景美食街與休閒空間', 'Uniqlo, GU, 雜貨與各式流行品牌'],
-                note: '傍晚前往瀨長島欣賞絕美夕陽',
-                transitTime: '35'
+                name: 'Gangala之谷',
+                category: '景點',
+                time: '09:00–17:00 (預約導覽)',
+                features: ['數萬年前鐘乳石洞崩塌形成的神秘山谷', '設於鐘乳石洞內的 Cave Cafe 洞穴咖啡館', '跟隨導覽員探索神秘古老大自然與樹人植物'],
+                note: '預約導覽與咖啡館體驗',
+                transitTime: '30'
               },
               {
                 id: 403,
+                name: '沖繩文化王國',
+                category: '景點',
+                time: '09:00–17:30',
+                features: ['日本三大鐘乳洞之一「玉泉洞」', '重現琉球王朝古民家村落與工藝體驗', '魄力十足的太鼓舞表演'],
+                note: '午餐：大城天婦羅店',
+                transitTime: '5'
+              },
+              {
+                id: 404,
+                name: 'PARCO CITY購物中心',
+                category: '購物',
+                time: '10:00–22:00',
+                features: ['全沖繩最新超大型海景購物中心', '開放式無敵海景美食街', '集結 Uniqlo, GU 及眾多流行品牌'],
+                note: '午後購物巡禮',
+                transitTime: '35'
+              },
+              {
+                id: 405,
+                name: '瀨長島',
+                category: '景點',
+                time: '全天開放',
+                features: ['純白地中海希臘風階梯建築群', '欣賞近距離飛機起降極致震撼', '沖繩絕美夕陽與幸福鬆餅所在地'],
+                note: '欣賞絕美日落夕陽',
+                transitTime: '20'
+              },
+              {
+                id: 406,
                 name: '那霸皇家公園酒店標誌性',
                 category: '住宿Check-in',
-                time: '15:00後',
-                features: ['位於那霸市區久茂地優越地段', '極具質感的現代日式豪華客房', '緊鄰單軌車站與國際通購物區'],
-                note: '晚餐享用琉球御膳18道或國際通美食',
+                time: '15:00後 Check-in',
+                features: ['位在那霸市中心久茂地優越地段', '奢華精緻的現代日式風格客房', '緊鄰單軌電車站與國際通商圈'],
+                note: 'Check-in 登記入住',
                 transitTime: '20'
+              },
+              {
+                id: 407,
+                name: '國際通',
+                category: '購物 / 美食',
+                time: '全天開放',
+                features: ['那霸最熱鬧繁華的奇蹟一英里', '聚集各式琉球料理與美式餐廳', 'Fontana Gelato、雪鹽冰、Blue Seal 必吃甜點'],
+                note: '晚餐：琉球御膳18道 / 國際通美食體驗',
+                transitTime: '5'
               }
             ]
           },
           {
             day: 5,
-            region: '那霸採買 ➔ 返程桃園',
+            region: '最後採買與返程',
             dateStr: '2027/02/28 (日)',
             items: [
               {
                 id: 501,
                 name: 'OTS臨空豐崎營業所',
                 category: '租車還車',
-                time: '11:00 還車',
-                features: ['檢查車況與油量/電量', '完成退租手續與租車結算', '轉乘接駁車或前往 Outlet'],
-                note: '11:00 前完成還車手續',
+                time: '11:00 前還車',
+                features: ['完成電動車電量與車況檢查', '辦理退租手續與結算', '乘接駁車前往 ASHIBANAA Outlet 或機場'],
+                note: '11:00 前順利還車',
                 transitTime: '20'
               },
               {
@@ -861,21 +945,30 @@
                 name: 'ASHIBANAA Outlet',
                 category: '購物',
                 time: '10:00–20:00',
-                features: ['歐風建築風格名品折扣 Outlet', '國際大牌與運動品牌齊備', '距離機場與 OTS 營運所極近'],
-                note: '午餐於 Outlet 享用，後前往機場寄放行李',
-                transitTime: '15'
+                features: ['歐風開放式名品折扣 Outlet', '國際精品與運動大牌齊備', '距離 OTS 與那霸機場極近'],
+                note: '午餐：ASHIBANAA Outlet',
+                transitTime: '10'
               },
               {
                 id: 503,
-                name: '國際通',
-                category: '購物 / 美食',
-                time: '全天開放',
-                features: ['那霸最熱鬧繁華的奇蹟一英里', 'Fontana Gelato, 雪鹽冰, Blue Seal', '最後巡禮採買伴手禮與紀念品'],
-                note: '搭乘單軌電車彈性遊覽周邊景點',
-                transitTime: '20'
+                name: '福州園',
+                category: '景點',
+                time: '09:00–18:00',
+                features: ['紀念那霸與福州締結友好城市所建之閩南式庭園', '木橋、小橋流水、瀑布與亭台樓閣', '展現濃郁中國傳統園林風情'],
+                note: '先至那霸機場寄放行李，午後至福州園散步',
+                transitTime: '15'
               },
               {
                 id: 504,
+                name: '國際通',
+                category: '購物',
+                time: '全天開放',
+                features: ['最後採買沖繩伴手禮與紀念品', '品嚐在地美食與黑糖甜點', '感受那霸熱鬧街區氣氛'],
+                note: '最後巡禮採買',
+                transitTime: '10'
+              },
+              {
+                id: 505,
                 type: 'flight',
                 airline: '長榮航空',
                 flightNo: 'BR185',
@@ -884,41 +977,40 @@
                 arrCode: 'TPE',
                 arrTime: '20:55',
                 duration: '1h 45m',
-                note: '請於 18:10 前抵達那霸機場辦理登機與託運'
+                note: '辦理登機託運，20:10 班機返回台灣溫暖的家'
               }
             ]
           }
         ]);
 
-        // 住宿詳細資料
+        // 住宿詳細資料 (飯店照片使用指定檔案名稱)
         const hotels = [
           {
             days: 'Day 1 & Day 2',
-            name: 'Vessel花苑沖繩飯店 (Vessel Hotel Campana Okinawa)',
-            feature: '位於美國村海濱第一排，附設海景展望大浴場與海景客房。',
-            parking: '設有飯店專用住客免費停車場',
-            phone: '+81 98-926-1188',
+            name: 'Vessel花苑沖繩飯店（Vessel Hotel Campana Okinawa）',
+            img: 'Vessel花苑沖繩飯店（Vessel Hotel Campana Okinawa）.jpg',
+            address: '9 Mihama, Chatan, Nakagami District, Okinawa 904-0115日本',
+            url: 'https://www.vessel-hotel.jp/campana/okinawa/',
             navUrl: 'https://maps.google.com/?q=Vessel+Hotel+Campana+Okinawa'
           },
           {
             days: 'Day 3',
-            name: '沖繩名護海灘貝斯特韋斯特飯店 (Best Western Okinawa Kouki Beach)',
-            feature: '所有客房均為海景房，下樓即抵達幸喜海灘，漫步海邊極為舒適。',
-            parking: '飯店附設專用停車場',
-            phone: '+81 98-054-8155',
+            name: '沖繩名護海灘貝斯特韋斯特飯店（Best Western Okinawa Kouki Beach）',
+            img: '沖繩名護海灘貝斯特韋斯特飯店（Best Western Okinawa Kouki Beach）.jpg',
+            address: '117 Koki, Nago, Okinawa 905-0025日本',
+            url: 'https://suginoi.orixhotelsandresorts.com/contents/nijikan/',
             navUrl: 'https://maps.google.com/?q=Best+Western+Okinawa+Kouki+Beach'
           },
           {
             days: 'Day 4',
-            name: '那霸皇家公園酒店標誌性 (Royal Park Hotel Iconic Naha)',
-            feature: '位在那霸市中心久茂地，奢華質感設計，步行即可抵達國際通。',
-            parking: '立體特約停車場 (付費)',
-            phone: '+81 98-951-1111',
+            name: '那霸皇家公園酒店標誌性（Royal Park Hotel Iconic Naha）',
+            img: '那霸皇家公園酒店標誌性（Royal Park Hotel Iconic Naha）.jpg',
+            address: '7F Bank of the Ryukyus Head Office, 1-11-1 Kumoji，那霸，日本',
+            url: 'https://www.monte-hermana.jp/cn/fukuoka/',
             navUrl: 'https://maps.google.com/?q=Royal+Park+Hotel+Iconic+Naha'
           }
         ];
 
-        // 購物與 Coupon 狀態 (無預設範本)
         const coupons = ref([]);
         const shoppingList = ref([]);
         const expenses = ref([]);
@@ -937,7 +1029,6 @@
           return expenses.value.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
         });
 
-        // Google Maps 導航連結生成
         const getGoogleMapNavUrl = (query) => {
           return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query + ' 沖繩')}`;
         };
@@ -948,7 +1039,7 @@
           return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
         };
 
-        // 拖曳排序 Drag & Drop
+        // 拖曳排序 Drag & Drop (指定按鈕觸發)
         const onDragStart = (idx) => {
           dragIndex.value = idx;
         };
@@ -960,9 +1051,9 @@
             list.splice(targetIdx, 0, movedItem);
           }
           dragIndex.value = null;
+          draggedIndex.value = null;
         };
 
-        // 長按事件判斷 (1秒)
         const startPressTimer = (callback) => {
           pressTimer = setTimeout(() => {
             callback();
@@ -973,7 +1064,6 @@
           if (pressTimer) clearTimeout(pressTimer);
         };
 
-        // FAB 按鈕邏輯
         const handleFabClick = () => {
           if (currentTab.value === 'schedule') {
             modalSchedule.value = { show: true, isEdit: false, index: null, form: { name: '', category: '景點', time: '', ticket: '', note: '' } };
@@ -984,7 +1074,6 @@
           }
         };
 
-        // 圖片上傳 (轉 Base64)
         const handleFileUpload = (e, type) => {
           const file = e.target.files[0];
           if (file) {
@@ -997,7 +1086,6 @@
           }
         };
 
-        // Modal 操作方法：行程
         const openEditModal = (item, idx) => {
           modalSchedule.value = { show: true, isEdit: true, index: idx, form: { ...item } };
         };
@@ -1008,7 +1096,7 @@
           if (modalSchedule.value.isEdit) {
             items[modalSchedule.value.index] = { ...items[modalSchedule.value.index], ...modalSchedule.value.form };
           } else {
-            items.push({ id: Date.now(), features: ['自由行程景點'], ...modalSchedule.value.form });
+            items.push({ id: Date.now(), features: ['特色體驗景點'], ...modalSchedule.value.form });
           }
           modalSchedule.value.show = false;
         };
@@ -1020,7 +1108,6 @@
           }
         };
 
-        // Modal 操作方法：購物
         const openEditShoppingModal = (item, idx) => {
           modalShopping.value = { show: true, isEdit: true, index: idx, form: { ...item } };
         };
@@ -1040,7 +1127,6 @@
           modalShopping.value.show = false;
         };
 
-        // Modal 操作方法：Coupon
         const openAddCouponModal = () => {
           modalCoupon.value = { show: true, isEdit: false, index: null, form: { title: '', img: '' } };
         };
@@ -1064,7 +1150,6 @@
           modalCoupon.value.show = false;
         };
 
-        // Modal 操作方法：記帳
         const openEditExpenseModal = (exp, idx) => {
           modalExpense.value = { show: true, isEdit: true, index: idx, form: { ...exp } };
         };
@@ -1102,6 +1187,7 @@
           modalShopping,
           modalCoupon,
           modalExpense,
+          draggedIndex,
           getGoogleMapNavUrl,
           getGoogleMapsDirectionsUrl,
           onDragStart,
