@@ -56,14 +56,15 @@
     }
   </style>
 </head>
-<body class="text-gray-800 pb-20">
+<body class="text-gray-800 pb-20 overflow-x-hidden">
 
-  <div id="app" class="max-w-md mx-auto min-h-screen relative shadow-2xl bg-[#FAF8F5] overflow-x-hidden">
+  <!-- 修正處：移除 overflow-x-hidden 以讓內部 header sticky 生效 -->
+  <div id="app" class="max-w-md mx-auto min-h-screen relative shadow-2xl bg-[#FAF8F5]">
     
     <!-- 隱藏的通用照片上傳 Input (給卡片上的相機按鈕使用) -->
     <input type="file" ref="cameraInput" @change="handleCameraUpload" accept="image/*" class="hidden">
 
-    <!-- 頁首 Banner (修改處：固定置頂 sticky top-0 z-30) -->
+    <!-- 頁首 Banner (固定置頂 sticky top-0 z-30) -->
     <header class="sticky top-0 z-30 w-full pt-4 pb-2 px-4 bg-[#FAF8F5]">
       <div class="relative h-[180px] w-full overflow-hidden rounded-[30px] shadow-md border-b-4 border-ocean/30">
         <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
