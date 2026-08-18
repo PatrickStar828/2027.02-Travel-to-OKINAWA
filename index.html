@@ -60,30 +60,8 @@
 
   <div id="app" class="max-w-md mx-auto min-h-screen relative shadow-2xl bg-[#FAF8F5] overflow-x-hidden">
     
-    <!-- 1. 固定頁首 Banner -->
-    <header class="fixed top-0 left-0 right-0 max-w-md mx-auto z-30 bg-[#FAF8F5]">
-      <div class="relative h-[250px] w-full overflow-hidden rounded-b-[35px] shadow-md border-b-4 border-ocean/30">
-        <!-- 滿版 Banner 圖片 -->
-        <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
-             alt="2027冬季沖繩之旅 Banner" 
-             class="w-full h-full object-cover object-center"
-             onerror="this.src='https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80'">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-        <div class="absolute bottom-4 left-5 right-5 text-white flex justify-between items-end">
-          <div>
-            <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">2027 冬季沖繩</span>
-            <h1 class="text-xl font-black mt-1 drop-shadow-md">獅薩與家人沖繩之旅</h1>
-          </div>
-          <div class="text-right bg-white/20 backdrop-blur-md px-3 py-1 rounded-2xl border border-white/40">
-            <p class="text-[10px] text-white/90">2027.02.24 - 02.28</p>
-            <p class="text-xs font-bold">5 天 4 夜自駕行</p>
-          </div>
-        </div>
-      </div>
-    </header>
-
     <!-- 主內容區域 -->
-    <main class="pt-[240px] px-4 pb-24 relative z-10 -mt-3">
+    <main class="px-4 pt-4 pb-24 relative z-10">
 
       <!-- Tab 1: 每日行程表 -->
       <section v-if="currentTab === 'schedule'" class="space-y-4">
@@ -133,10 +111,15 @@
               </a>
             </div>
 
-            <!-- 1. 航班/機場特別卡片 -->
-            <div v-if="item.type === 'flight'" class="bg-gradient-to-r from-ocean to-slate-700 text-white rounded-3xl p-4 shadow-lg border-2 border-white relative overflow-hidden">
+            <!-- 1. 航班/機場特別卡片 (長按 2 秒開啟 Flightradar24) -->
+            <div v-if="item.type === 'flight'" 
+                 @touchstart="startFlightPressTimer"
+                 @touchend="clearFlightPressTimer"
+                 @mousedown="startFlightPressTimer"
+                 @mouseup="clearFlightPressTimer"
+                 class="bg-gradient-to-r from-ocean to-slate-700 text-white rounded-3xl p-4 shadow-lg border-2 border-white relative overflow-hidden cursor-pointer select-none">
               <div class="flex justify-between items-start mb-2">
-                <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-plane-departure mr-1"></i>航班資訊</span>
+                <span class="bg-sakura text-sakuraDark text-xs font-bold px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-plane-departure mr-1"></i>航班資訊 (長按開啟即時動態)</span>
                 <span class="text-xs text-white/80 font-mono">{{ item.flightNo }}</span>
               </div>
               <div class="flex justify-between items-center my-2">
@@ -168,7 +151,7 @@
                  class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 relative group transition hover:shadow-lg">
               
               <div class="flex items-start space-x-3">
-                <!-- 景點照片 (左上角放上與景點名稱相同圖檔，從 Github 資料夾抓取) -->
+                <!-- 景點照片 -->
                 <div class="w-20 h-20 rounded-2xl overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-100 shadow-inner">
                   <img :src="item.name + '.jpg'" :alt="item.name" class="w-full h-full object-cover" onerror="this.onerror=null; this.src=this.src.endsWith('.jpg')?this.src.replace('.jpg','.png'):'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=300&q=80'">
                 </div>
@@ -176,7 +159,7 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-oceanLight text-ocean">{{ item.category }}</span>
-                    <!-- 編輯按鈕下方生成一個三條線 ICON 圖示按鈕，拉動此按鈕才能拖曳 -->
+                    <!-- 編輯與拖曳按鈕 -->
                     <div class="flex flex-col items-center space-y-1">
                       <button @click="openEditModal(item, index)" class="text-rock hover:text-ocean p-1 text-xs" title="編輯">
                         <i class="fa-solid fa-pen-to-square"></i>
@@ -187,7 +170,7 @@
                     </div>
                   </div>
 
-                  <!-- 點擊名稱或導航圖示直接開啟 Google Map 導航 -->
+                  <!-- 點擊名稱或導航圖示開啟 Google Map -->
                   <a :href="getGoogleMapNavUrl(item.name)" target="_blank" class="block group-hover:text-ocean transition">
                     <h3 class="font-black text-base text-gray-800 truncate mt-0.5 flex items-center">
                       {{ item.name }}
@@ -222,11 +205,18 @@
       <!-- Tab 2: 航班 & 租車 & 每日住宿資訊 -->
       <section v-if="currentTab === 'info'" class="space-y-5">
         
-        <!-- 1. 航班資訊 -->
-        <div class="bg-white rounded-3xl p-4 shadow-md border border-gray-100">
-          <h2 class="font-black text-lg text-ocean flex items-center mb-3">
-            <i class="fa-solid fa-plane text-sakuraDark mr-2"></i>航班資訊（長榮航空）
-          </h2>
+        <!-- 1. 航班資訊卡片 (長按 2 秒開啟 Flightradar24) -->
+        <div @touchstart="startFlightPressTimer"
+             @touchend="clearFlightPressTimer"
+             @mousedown="startFlightPressTimer"
+             @mouseup="clearFlightPressTimer"
+             class="bg-white rounded-3xl p-4 shadow-md border border-gray-100 cursor-pointer select-none">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="font-black text-lg text-ocean flex items-center">
+              <i class="fa-solid fa-plane text-sakuraDark mr-2"></i>航班資訊（長榮航空）
+            </h2>
+            <span class="text-[10px] text-rock bg-oceanLight px-2 py-0.5 rounded-full">長按 2 秒開即時雷達</span>
+          </div>
           <div class="space-y-3">
             <!-- 去程 -->
             <div class="bg-oceanLight/60 rounded-2xl p-3 border border-ocean/20">
@@ -408,7 +398,12 @@
         <div class="bg-gradient-to-br from-ocean to-slate-600 rounded-3xl p-4 text-white shadow-lg">
           <div class="flex justify-between items-center mb-2">
             <h2 class="font-bold text-sm flex items-center"><i class="fa-solid fa-calculator mr-1.5"></i>日幣即時匯率換算</h2>
-            <span class="text-[10px] text-white/70">匯率參考: {{ exchangeRate }}</span>
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[10px] text-white/80">即時牌告: {{ exchangeRate.toFixed(4) }}</span>
+              <button @click="fetchRealtimeRate" class="text-[10px] bg-white/20 hover:bg-white/30 px-1.5 py-0.5 rounded transition" title="更新匯率">
+                <i class="fa-solid fa-rotate-right" :class="{'fa-spin': isRateLoading}"></i>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-3 items-center">
             <div>
@@ -458,7 +453,7 @@
                 </span>
                 <div>
                   <p class="font-bold text-sm text-gray-800">{{ exp.name }}</p>
-                  <p class="text-[10px] text-rock">{{ exp.date }} • {{ exp.payment }}</p>
+                  <p class="text-[10px] text-rock">{{ formatExpenseDate(exp.date) }} • {{ exp.payment }}</p>
                 </div>
               </div>
               <div class="text-right">
@@ -470,6 +465,25 @@
         </div>
 
       </section>
+
+      <!-- 頁首 Banner (置於主內容底部) -->
+      <header class="w-full my-6 bg-[#FAF8F5]">
+        <div class="relative h-[250px] w-full overflow-hidden rounded-[35px] shadow-md border-b-4 border-ocean/30">
+          <!-- 滿版 Banner 圖片 -->
+          <img src="2027冬季沖繩之旅-獅薩與家人-Banner.jpeg" 
+               alt="2027冬季沖繩之旅 Banner" 
+               class="w-full h-full object-cover object-center"
+               onerror="this.src='https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1200&q=80'">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+          <div class="absolute bottom-4 left-5 right-5 text-white flex justify-end items-end">
+            <!-- 左下角文字已移除以避免遮擋獅薩 -->
+            <div class="text-right bg-white/20 backdrop-blur-md px-3 py-1 rounded-2xl border border-white/40">
+              <p class="text-[10px] text-white/90">2027.02.24 - 02.28</p>
+              <p class="text-xs font-bold">5 天 4 夜自駕行</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
     </main>
 
@@ -602,17 +616,19 @@
   </div>
 
   <script>
-    const { createApp, ref, computed } = Vue;
+    const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
       setup() {
         const currentTab = ref('schedule');
         const activeDayIndex = ref(0);
-        const exchangeRate = ref(0.215);
+        const exchangeRate = ref(0.2125);
+        const isRateLoading = ref(false);
         const calcJpy = ref('');
         const dragIndex = ref(null);
         const draggedIndex = ref(null);
         let pressTimer = null;
+        let flightPressTimer = null;
 
         // 5 天日期資料
         const days = [
@@ -623,7 +639,8 @@
           { week: '日', date: '2/28' }
         ];
 
-        const dateOptions = ['2027/02/24', '2027/02/25', '2027/02/26', '2027/02/27', '2027/02/28'];
+        // 需求3: 記帳日期欄位調整為 月/日(星期) 格式
+        const dateOptions = ['2/24(三)', '2/25(四)', '2/26(五)', '2/27(六)', '2/28(日)'];
 
         const currentWeather = ref({
           temp: 18,
@@ -631,7 +648,51 @@
           rainProb: 15
         });
 
-        // 修正後的 5 天每日行程資料
+        // 需求4: 抓取即時市場牌告匯率資訊
+        const fetchRealtimeRate = async () => {
+          isRateLoading.value = true;
+          try {
+            const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+            const data = await res.json();
+            if (data && data.rates && data.rates.TWD) {
+              exchangeRate.value = data.rates.TWD;
+            }
+          } catch (err) {
+            console.warn('無法取得即時匯率，維持預設匯率:', err);
+          } finally {
+            isRateLoading.value = false;
+          }
+        };
+
+        onMounted(() => {
+          fetchRealtimeRate();
+        });
+
+        // 需求5: 長按 2 秒開啟 Flightradar24
+        const startFlightPressTimer = () => {
+          flightPressTimer = setTimeout(() => {
+            window.open('https://www.flightradar24.com/24.36,121.15/8', '_blank');
+          }, 2000);
+        };
+
+        const clearFlightPressTimer = () => {
+          if (flightPressTimer) clearTimeout(flightPressTimer);
+        };
+
+        const formatExpenseDate = (dateStr) => {
+          if (!dateStr) return '';
+          if (dateStr.includes('(')) return dateStr;
+          // 若為全日期格式則轉為 M/D(週幾)
+          const parts = dateStr.split('/');
+          if (parts.length === 3) {
+            const dayMap = ['(日)', '(一)', '(二)', '(三)', '(四)', '(五)', '(六)'];
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
+            return `${parseInt(parts[1])}/${parseInt(parts[2])}${dayMap[d.getDay()]}`;
+          }
+          return dateStr;
+        };
+
+        // 5 天每日行程資料
         const scheduleData = ref([
           {
             day: 1,
@@ -688,7 +749,7 @@
               },
               {
                 id: 106,
-                name: 'Vessel花苑沖繩飯店（Vessel Hotel Campana Okinawa）',
+                name: 'Vessel花苑沖繩飯店',
                 category: '住宿Check-in',
                 time: '15:00後 Check-in',
                 features: ['位在美國村海濱第一排優越位置', '頂樓海景展望大浴場', '豐富沖繩在地特色早餐選擇'],
@@ -847,7 +908,7 @@
               },
               {
                 id: 308,
-                name: '沖繩名護海灘貝斯特韋斯特飯店（Best Western Okinawa Kouki Beach）',
+                name: '沖繩名護海灘貝斯特韋斯特飯店',
                 category: '住宿Check-in',
                 time: '15:00後 Check-in',
                 features: ['所有客房均為海景房', '下樓即達幸喜海灘沙灘', '陽台可直接欣賞名護灣夕陽'],
@@ -881,7 +942,7 @@
               },
               {
                 id: 403,
-                name: '沖繩文化王國（玉泉洞）',
+                name: '沖繩文化王國',
                 category: '景點',
                 time: '09:00–17:30',
                 features: ['日本三大鐘乳洞之一「玉泉洞」', '重現琉球王朝古民家村落與工藝體驗', '魄力十足的太鼓舞表演'],
@@ -908,7 +969,7 @@
               },
               {
                 id: 406,
-                name: '那霸皇家公園酒店標誌性（Royal Park Hotel Iconic Naha）',
+                name: '那霸皇家公園酒店標誌性',
                 category: '住宿Check-in',
                 time: '15:00後 Check-in',
                 features: ['位在那霸市中心久茂地優越地段', '奢華精緻的現代日式風格客房', '緊鄰單軌電車站與國際通商圈'],
@@ -983,7 +1044,7 @@
           }
         ]);
 
-        // 住宿詳細資料 (飯店照片使用指定檔案名稱)
+        // 住宿詳細資料
         const hotels = [
           {
             days: 'Day 1 & Day 2',
@@ -1019,7 +1080,7 @@
         const modalSchedule = ref({ show: false, isEdit: false, index: null, form: { name: '', category: '', time: '', ticket: '', note: '' } });
         const modalShopping = ref({ show: false, isEdit: false, index: null, form: { name: '', price: '', img: '' } });
         const modalCoupon = ref({ show: false, isEdit: false, index: null, form: { title: '', img: '' } });
-        const modalExpense = ref({ show: false, isEdit: false, index: null, form: { category: '飲食', name: '', date: '2027/02/24', amount: '', payment: '現金' } });
+        const modalExpense = ref({ show: false, isEdit: false, index: null, form: { category: '飲食', name: '', date: '2/24(三)', amount: '', payment: '現金' } });
 
         const currentDayData = computed(() => {
           return scheduleData.value[activeDayIndex.value] || scheduleData.value[0];
@@ -1039,7 +1100,7 @@
           return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
         };
 
-        // 拖曳排序 Drag & Drop (指定按鈕觸發)
+        // 拖曳排序 Drag & Drop
         const onDragStart = (idx) => {
           dragIndex.value = idx;
         };
@@ -1070,7 +1131,7 @@
           } else if (currentTab.value === 'shopping') {
             modalShopping.value = { show: true, isEdit: false, index: null, form: { name: '', price: '', img: '' } };
           } else if (currentTab.value === 'expense') {
-            modalExpense.value = { show: true, isEdit: false, index: null, form: { category: '飲食', name: '', date: dateOptions[activeDayIndex.value] || '2027/02/24', amount: '', payment: '現金' } };
+            modalExpense.value = { show: true, isEdit: false, index: null, form: { category: '飲食', name: '', date: dateOptions[activeDayIndex.value] || '2/24(三)', amount: '', payment: '現金' } };
           }
         };
 
@@ -1177,6 +1238,7 @@
           currentWeather,
           hotels,
           exchangeRate,
+          isRateLoading,
           calcJpy,
           coupons,
           shoppingList,
@@ -1188,6 +1250,10 @@
           modalCoupon,
           modalExpense,
           draggedIndex,
+          fetchRealtimeRate,
+          formatExpenseDate,
+          startFlightPressTimer,
+          clearFlightPressTimer,
           getGoogleMapNavUrl,
           getGoogleMapsDirectionsUrl,
           onDragStart,
