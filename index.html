@@ -614,11 +614,12 @@
 
   </div>
 
-  <script>
+<script>
     const { createApp, ref, computed, onMounted } = Vue;
 
     createApp({
       setup() {
+        // 預設開啟「行程」頁面 (schedule)
         const currentTab = ref('schedule');
         const activeDayIndex = ref(0);
         const exchangeRate = ref(0.2125);
@@ -658,7 +659,7 @@
             }
           } catch (err) {
             console.warn('無法取得即時匯率，維持預設匯率:', err);
-          } fontally {
+          } finally {
             isRateLoading.value = false;
           }
         };
