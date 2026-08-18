@@ -476,6 +476,11 @@
                     <p class="font-bold text-sm text-gray-800">{{ exp.name }}</p>
                   </div>
                   <p class="text-[10px] text-rock mt-0.5">{{ formatExpenseDate(exp.date) }} • {{ exp.payment }}</p>
+                  <!-- 新增：顯示備註內容 -->
+                  <p v-if="exp.note" class="text-[11px] text-gray-500 mt-1 flex items-start">
+                    <i class="fa-regular fa-comment-dots mr-1 mt-0.5 text-ocean"></i>
+                    <span>{{ exp.note }}</span>
+                  </p>
                 </div>
               </div>
 
@@ -608,6 +613,9 @@
           <option value="PayPay">PayPay</option>
           <option value="Suica">Suica (西瓜卡)</option>
         </select>
+
+        <!-- 新增：備註輸入框 -->
+        <textarea v-model="modalExpense.form.note" placeholder="備註 (例如：與家人均分、買給朋友的伴手禮)" class="w-full border p-2.5 rounded-xl text-sm focus:outline-none border-gray-200 h-16"></textarea>
 
         <div class="text-xs text-gray-500">
           <label class="block mb-1 font-bold text-gray-700"><i class="fa-solid fa-camera mr-1 text-ocean"></i>上傳商品 / 收據照片：</label>
@@ -1085,7 +1093,8 @@
         const modalSchedule = ref({ show: false, isEdit: false, index: null, form: { name: '', category: '', time: '', ticket: '', note: '' } });
         const modalShopping = ref({ show: false, isEdit: false, index: null, form: { name: '', price: '', img: '' } });
         const modalCoupon = ref({ show: false, isEdit: false, index: null, form: { title: '', img: '' } });
-        const modalExpense = ref({ show: false, isEdit: false, index: null, form: { category: '飲食', name: '', date: '2/24(三)', amount: '', payment: '現金', img: '' } });
+        // 修正處：在 modalExpense.form 中加入 note 欄位
+        const modalExpense = ref({ show: false, isEdit: false, index: null, form: { category: '飲食', name: '', date: '2/24(三)', amount: '', payment: '現金', note: '', img: '' } });
 
         const currentDayData = computed(() => {
           return scheduleData.value[activeDayIndex.value] || scheduleData.value[0];
@@ -1135,7 +1144,7 @@
           } else if (currentTab.value === 'shopping') {
             modalShopping.value = { show: true, isEdit: false, index: null, form: { name: '', price: '', img: '' } };
           } else if (currentTab.value === 'expense') {
-            modalExpense.value = { show: true, isEdit: false, index: null, form: { category: '飲食', name: '', date: dateOptions[activeDayIndex.value] || '2/24(三)', amount: '', payment: '現金', img: '' } };
+            modalExpense.value = { show: true, isEdit: false, index: null, form: { category: '飲食', name: '', date: dateOptions[activeDayIndex.value] || '2/24(三)', amount: '', payment: '現金', note: '', img: '' } };
           }
         };
 
